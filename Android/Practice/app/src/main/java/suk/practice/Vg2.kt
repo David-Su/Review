@@ -21,7 +21,7 @@ class Vg2(context: Context?, attrs: AttributeSet?) : LinearLayout(context, attrs
 
     override fun onInterceptTouchEvent(ev: MotionEvent?): Boolean {
         Log.d("suk","  "+javaClass.simpleName+"    "+"onInterceptTouchEvent  "+Util.getAction(ev))
-        return if (ev!!.action == MotionEvent.ACTION_DOWN) true else  super.onInterceptTouchEvent(ev)
+        return super.onInterceptTouchEvent(ev)
     }
 
 
