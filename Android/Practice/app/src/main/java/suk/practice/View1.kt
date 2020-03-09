@@ -22,6 +22,7 @@ class View1(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
         Log.d("suk","  "+javaClass.simpleName+"    "+"onTouchEvent  "+Util.getAction(event))
+        invalidate()
 //        return if (event!!.action == MotionEvent.ACTION_DOWN) true else super.onTouchEvent(event)
         return true
     }
