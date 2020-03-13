@@ -30,4 +30,9 @@ class Vg1(context: Context?, attrs: AttributeSet?) : LinearLayout(context, attrs
         return super.onTouchEvent(event)
     }
 
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        Log.d("onMeasure",Thread.currentThread().name)
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+    }
+
 }

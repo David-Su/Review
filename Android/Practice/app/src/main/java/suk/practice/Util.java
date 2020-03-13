@@ -1,5 +1,6 @@
 package suk.practice;
 
+import android.app.ActivityManager;
 import android.view.MotionEvent;
 
 /**

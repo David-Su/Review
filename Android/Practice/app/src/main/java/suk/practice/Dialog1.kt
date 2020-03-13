@@ -15,7 +15,6 @@ class Dialog1(context: Context) : Dialog(context) {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        PopupWindow
     }
 
 }
