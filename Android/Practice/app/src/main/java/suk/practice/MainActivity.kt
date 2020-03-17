@@ -7,6 +7,7 @@ import android.os.Handler
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
+import java.util.concurrent.Executors
 
 class MainActivity : AppCompatActivity() {
 
@@ -23,6 +24,8 @@ class MainActivity : AppCompatActivity() {
                 Log.d("startActivity","Handler1")
             }
             Log.d("startActivity","执行后")
+
+            Executors.newScheduledThreadPool()
         }
 
     }
