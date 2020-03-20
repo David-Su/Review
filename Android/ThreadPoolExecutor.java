@@ -938,7 +938,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                 if (wc >= CAPACITY ||
                     wc >= (core ? corePoolSize : maximumPoolSize)) //work数量如果大于限制的数量，返回失败
                     return false;
-                if (compareAndIncrementWorkerCount(c)) // 这里失败的话，说明有其他线程也在尝试往线程池中创建线程，重来
+                if (compareAndIncrementWorkerCount(c)) // 这里失败的话，说明有其他线程也在尝试往线程池中创建线程，往下判断状态。成功的话就跳出去了，做正式的操作
                     break retry;
                 c = ctl.get();  // Re-read ctl
                 if (runStateOf(c) != rs)      //如果状态变更，重来
