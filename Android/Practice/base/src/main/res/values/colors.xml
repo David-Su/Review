@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#008577</color>
+    <color name="colorPrimaryDark">#00574B</color>
+    <color name="colorAccent">#D81B60</color>
+
+    <!--背景颜色-->
+    <color name="backgroud">#F1F1F1</color>
+    <!--主要内容字体颜色-->
+    <color name="main_text">#333333</color>
+    <!--次要内容字体颜色-->
+    <color name="sub_text">#ebf4f1</color>
+    <!--输入框提示文字颜色-->
+    <color name="hint_text">#C1CEDB</color>
+    <!--分割线颜色-->
+    <!--<color name="color_line">#888888</color>-->
+    <color name="line">#C1CEDB</color>
+    <color name="tall_line">#F1F1F1</color>
+    <!--半透明的颜色-->
+    <color name="half_grey">#88888888</color>
+    <color name="half_grey_light">#88ecebeb</color>
+    <color name="half_white">#88FFFFFF</color>
+
+
+    <color name="white">#ffffff</color>
+
+    <color name="green">#11CC11</color>
+
+
+</resources>

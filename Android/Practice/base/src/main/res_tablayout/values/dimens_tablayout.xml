@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="tabLayoutSize">@dimen/abc_action_bar_default_height_material</dimen>
+    <dimen name="tabLayoutTextSize">@dimen/abc_text_size_title_material</dimen>
+
+</resources>

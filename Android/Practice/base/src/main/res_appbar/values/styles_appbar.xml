@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- ToolBar的theme -->
+    <style name="ToolBarTheme" parent="Base.Theme.AppCompat.Light.DarkActionBar">
+        <!--Toolbar的menu折叠图标和NavigationIcon的颜色-->
+        <item name="colorControlNormal">@color/toolBarControlIconColor</item>
+        <!--toolbar高度-->
+        <item name="android:minHeight">@dimen/toolBarSize</item>
+        <!--标题颜色-->
+        <item name="android:textColorPrimary">@color/toolBarTitleColor</item>
+        <!--菜单文字颜色-->
+        <item name="actionMenuTextColor">@color/toolBarMenuTextColor</item>
+        <!--菜单文字风格-->
+        <item name="actionMenuTextAppearance">@style/ToolBarTextAppearance</item>
+
+        <item name="android:gravity">center_vertical</item>
+        <!--<item name="actionOverflowButtonStyle">@style/ToolBarOverflowButtonStyle</item>-->
+    </style>
+
+    <style name="ToolBarTextAppearance">
+        <item name="android:textSize">@dimen/toolBarMenuItemTextSize</item>
+    </style>
+
+    <style name="ToolBarOverflowButtonStyle" parent="android:style/Widget.Holo.Light.ActionButton.Overflow">
+        <item name="srcCompat">@drawable/ic_bar_menu_more</item>
+    </style>
+
+    <!--弹出菜单的theme-->
+    <style name="ToolbarPopupTheme" parent="Widget.MaterialComponents.Toolbar">
+        <!--弹出菜单的背景-->
+        <item name="android:colorBackground">@color/toolBarPopupMenuBackground</item>
+        <!--设置不覆盖锚点-->
+        <item name="overlapAnchor">false</item>
+        <!--居中-->
+        <item name="android:gravity">center</item>
+    </style>
+</resources>

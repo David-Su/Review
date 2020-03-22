@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--toolbar的标题文字颜色-->
+    <color name="toolBarTitleColor">@color/white</color>
+    <!--toolbar的菜单文字颜色-->
+    <color name="toolBarMenuTextColor">@color/white</color>
+    <!--toolbar的弹出菜单得背景-->
+    <!--<color name="toolBarPopupMenuBackground">#212121</color>-->
+    <color name="toolBarPopupMenuBackground">@color/colorPrimary</color>
+    <!--Toolbar的menu折叠图标和NavigationIcon的颜色-->
+    <color name="toolBarControlIconColor">@color/white</color>
+</resources>

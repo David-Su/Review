@@ -12,11 +12,14 @@ import android.view.WindowManager
 
 import kotlinx.android.synthetic.main.activity_main.*
 
-class MainActivity2 : AppCompatActivity() {
+class MainActivity2 : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        Log.d("startActivity","MainActivity2 onCreate")
+
+
+        getTask()
+        Log.d("startActivity", "MainActivity2 onCreate")
     }
 }

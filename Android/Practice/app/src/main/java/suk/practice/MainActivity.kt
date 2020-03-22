@@ -1,32 +1,74 @@
 package suk.practice
 
 import android.content.Intent
-import android.os.Binder
 import android.os.Bundle
-import android.os.Handler
 import android.util.Log
-import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.concurrent.Executors
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ThreadFactory
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        getTask()
+
+        var i = 0
+//        val executor = ThreadPoolExecutor(
+//            2, 100,
+//            0L, TimeUnit.MILLISECONDS,
+//            LinkedBlockingQueue<Runnable>(),
+//            ThreadFactory {
+//                i++
+//                Log.d(tag,"创建第${i}条线程" )
+//                Thread(it).apply { name = "第${i}条线程" }
+//            }
+//        )
+
+//        val executor = Executors.newScheduledThreadPool(2,ThreadFactory {
+//            i++
+//            Log.d(tag,"创建第${i}条线程" )
+//            Thread(it).apply { name = "第${i}条线程" }
+//        })
+
         btn.setOnClickListener {
-            startActivity(Intent(this,MainActivity2::class.java))
-            Handler().post {
-//                while (true) {
-//
-//                }
+            val executor = Executors.newCachedThreadPool(ThreadFactory {
+                synchronized(this) {
+                    i++
+                    Log.d(tag, "创建第${i}条线程")
+                }
 
-                Log.d("startActivity","Handler1")
+                Thread(it).apply { name = "第${i}条线程" }
+            })
+
+            for (i in 0 until 10) {
+                executor.execute {
+//                    while (true) {
+////                    Log.d(tag,Thread.currentThread().name)
+//                    }
+                }
             }
-            Log.d("startActivity","执行后")
-
-            Executors.newScheduledThreadPool()
         }
 
+//        val executor = Executors.newCachedThreadPool(ThreadFactory {
+//            synchronized(this) {
+//                i++
+//                Log.d(tag, "创建第${i}条线程")
+//            }
+//
+//            Thread(it).apply { name = "第${i}条线程" }
+//        })
+//
+//        for (i in 0 until 10) {
+//            executor.execute {
+//                while (true) {
+////                    Log.d(tag,Thread.currentThread().name)
+//                }
+//            }
+//        }
     }
 }
