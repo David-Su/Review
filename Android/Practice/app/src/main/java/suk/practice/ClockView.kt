@@ -13,7 +13,9 @@ import android.util.Log
 import android.view.View
 import java.util.*
 import kotlin.concurrent.timer
+import kotlin.math.cos
 import kotlin.math.log
+import kotlin.math.sin
 
 /**
  * @author SuK
@@ -25,7 +27,7 @@ class ClockView : View {
 
     private val mPaint = Paint()
     private val mTag = "ClockView"
-    private var secDegress = 0f
+    private var mSecDegress = 0.0
 
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) {
 //        context.registerReceiver(object : BroadcastReceiver() {
@@ -40,11 +42,11 @@ class ClockView : View {
             val minute = Calendar.getInstance().get(Calendar.MINUTE)
             val second = Calendar.getInstance().get(Calendar.SECOND)
 
-            secDegress = second.toFloat() / 60f * 360f
+            mSecDegress = (second.toDouble() + 1) / 60 * 360
 
             invalidate()
 
-            Log.d(mTag, second.toString())
+            Log.d(mTag, second.toString() + "     " + mSecDegress)
         }
     }
 
@@ -60,13 +62,22 @@ class ClockView : View {
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        val size= height.toFloat()
-        val r= height/2f
+        val size = height.toFloat()
+        val r = height / 2f
         mPaint.flags = Paint.ANTI_ALIAS_FLAG
         mPaint.strokeWidth = context.resources.getDimension(R.dimen.dp_5)
         mPaint.color = context.getColor(R.color.colorPrimary)
         mPaint.style = Paint.Style.STROKE
-        canvas.drawArc(RectF(0f,0f,size,size),0f,360f,true,mPaint)
+        canvas.drawCircle(r, r, r, mPaint)
+
+
+        val stopX = r + r * cos(Math.toRadians(90 - mSecDegress))
+        val stopY = r - r * sin(Math.toRadians(90 - mSecDegress))
+        canvas.drawLine(r, r, stopX.toFloat(), stopY.toFloat(), mPaint)
+        Log.d(mTag, "r:"+r)
+        Log.d(mTag, "degree:"+(90 - mSecDegress))
+        Log.d(mTag, "cos:"+cos(90 - mSecDegress))
+//        canvas.drawArc(RectF(0f,0f,size,size),0f,360f,true,mPaint)
     }
 
     override fun onDetachedFromWindow() {
