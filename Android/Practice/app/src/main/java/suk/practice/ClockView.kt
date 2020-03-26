@@ -4,9 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.RectF
+import android.graphics.*
 import android.icu.util.Measure
 import android.util.AttributeSet
 import android.util.Log
@@ -60,6 +58,13 @@ class ClockView : View {
         )
     }
 
+    val picture = Picture().also {picture->
+        val picCanvas = picture.beginRecording(100, 100)
+        picCanvas.drawCircle(0f,0f,200f,mPaint)
+        picture.endRecording()
+
+    }
+
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         val size = height.toFloat()
@@ -78,6 +83,11 @@ class ClockView : View {
         Log.d(mTag, "degree:"+(90 - mSecDegress))
         Log.d(mTag, "cos:"+cos(90 - mSecDegress))
 //        canvas.drawArc(RectF(0f,0f,size,size),0f,360f,true,mPaint)
+
+        canvas.drawPicture(picture)
+        canvas.drawPath(Path())
+        context.getdra
+
     }
 
     override fun onDetachedFromWindow() {
