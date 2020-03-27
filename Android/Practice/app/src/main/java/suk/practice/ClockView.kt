@@ -83,11 +83,10 @@ class ClockView : View {
         Log.d(mTag, "degree:"+(90 - mSecDegress))
         Log.d(mTag, "cos:"+cos(90 - mSecDegress))
 //        canvas.drawArc(RectF(0f,0f,size,size),0f,360f,true,mPaint)
-
+RectF()
         canvas.drawPicture(picture)
-        canvas.drawPath(Path())
-        context.getdra
-
+        canvas.scale()
+        canvas.translate()
     }
 
     override fun onDetachedFromWindow() {
