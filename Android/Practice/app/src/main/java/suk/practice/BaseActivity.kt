@@ -7,6 +7,7 @@ import android.util.Log
 import android.view.animation.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.MutableLiveData
+import java.util.HashMap
 
 /**
  * @author SuK
@@ -24,6 +25,10 @@ abstract class BaseActivity : AppCompatActivity() {
 
     fun animatior() {
 
+    }
+
+    fun hashMap(){
+        HashMap<Int,String>().put(1,"1")
     }
 
     fun threadPoolExecutor(){

@@ -41,7 +41,7 @@ class ClockView : View {
             val second = Calendar.getInstance().get(Calendar.SECOND)
 
             mSecDegress = (second.toDouble() + 1) / 60 * 360
-
+requestLayout()
             invalidate()
 
             Log.d(mTag, second.toString() + "     " + mSecDegress)
@@ -82,11 +82,8 @@ class ClockView : View {
         Log.d(mTag, "r:"+r)
         Log.d(mTag, "degree:"+(90 - mSecDegress))
         Log.d(mTag, "cos:"+cos(90 - mSecDegress))
+
 //        canvas.drawArc(RectF(0f,0f,size,size),0f,360f,true,mPaint)
-RectF()
-        canvas.drawPicture(picture)
-        canvas.scale()
-        canvas.translate()
     }
 
     override fun onDetachedFromWindow() {
