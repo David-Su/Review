@@ -85,8 +85,6 @@ class ClockView : View {
 //        canvas.drawArc(RectF(0f,0f,size,size),0f,360f,true,mPaint)
 RectF()
         canvas.drawPicture(picture)
-        canvas.scale()
-        canvas.translate()
     }
 
     override fun onDetachedFromWindow() {
