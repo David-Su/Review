@@ -1,12 +1,12 @@
 package suk.practice
 
-import android.animation.*
-import android.graphics.drawable.AnimationDrawable
 import android.os.Bundle
 import android.util.Log
-import android.view.animation.*
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.MutableLiveData
+import java.lang.reflect.InvocationHandler
+import java.lang.reflect.Method
+import java.lang.reflect.Proxy
+import java.util.*
 
 /**
  * @author SuK
@@ -24,6 +24,18 @@ abstract class BaseActivity : AppCompatActivity() {
 
     fun animatior() {
 
+    }
+
+    fun hashMap(){
+        HashMap<Int,String>().put(1,"1")
+    }
+
+    fun invacation(): Sercvice {
+        return Proxy.newProxyInstance(Sercvice::class.java.classLoader, arrayOf(Sercvice::class.java),
+            InvocationHandler{ any: Any, method: Method, args: Array<Any> ->
+                Log.d("Proxy",method.name)
+                Log.d("Proxy",args.toString())
+            }) as Sercvice
     }
 
     fun threadPoolExecutor(){

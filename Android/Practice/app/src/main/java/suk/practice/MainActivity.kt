@@ -1,8 +1,11 @@
 package suk.practice
 
+import android.animation.ObjectAnimator
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import kotlinx.android.synthetic.main.activity_main.*
+import retrofit2.Retrofit
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadFactory
@@ -16,6 +19,10 @@ class MainActivity : BaseActivity() {
         setContentView(R.layout.activity_main)
         getTask()
 
+
+        btn.setOnClickListener {
+            invacation().a("哈哈哈哈哈哈哈")
+        }
 
     }
 }
