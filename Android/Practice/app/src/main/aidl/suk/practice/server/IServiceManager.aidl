@@ -1,11 +1,10 @@
 // IServiceManager.aidl
-package suk.practice;
-
+package suk.practice.server;
+import suk.practice.server.Book;
 // Declare any non-default types here with import statements
 
 interface IServiceManager {
 
-    void addData(String data);
+    void addBook(in Book book);
 
-    String getData(String par);
 }
