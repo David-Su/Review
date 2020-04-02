@@ -8,7 +8,10 @@ import android.graphics.*
 import android.icu.util.Measure
 import android.util.AttributeSet
 import android.util.Log
+import android.view.GestureDetector
+import android.view.MotionEvent
 import android.view.View
+import android.view.WindowManager
 import java.util.*
 import kotlin.concurrent.timer
 import kotlin.math.cos
@@ -26,6 +29,7 @@ class ClockView : View {
     private val mPaint = Paint()
     private val mTag = "ClockView"
     private var mSecDegress = 0.0
+    private var mGestureDetector: GestureDetector? = null
 
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) {
 //        context.registerReceiver(object : BroadcastReceiver() {
@@ -42,7 +46,10 @@ class ClockView : View {
 
             mSecDegress = (second.toDouble() + 1) / 60 * 360
             Log.d(mTag, second.toString() + "     " + mSecDegress)
+            scrollTo()
+            postInvalidate()
         }
+
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -55,9 +62,9 @@ class ClockView : View {
         )
     }
 
-    val picture = Picture().also {picture->
+    val picture = Picture().also { picture ->
         val picCanvas = picture.beginRecording(100, 100)
-        picCanvas.drawCircle(0f,0f,200f,mPaint)
+        picCanvas.drawCircle(0f, 0f, 200f, mPaint)
         picture.endRecording()
 
     }
@@ -72,13 +79,12 @@ class ClockView : View {
         mPaint.style = Paint.Style.STROKE
         canvas.drawCircle(r, r, r, mPaint)
 
-
         val stopX = r + r * cos(Math.toRadians(90 - mSecDegress))
         val stopY = r - r * sin(Math.toRadians(90 - mSecDegress))
         canvas.drawLine(r, r, stopX.toFloat(), stopY.toFloat(), mPaint)
-        Log.d(mTag, "r:"+r)
-        Log.d(mTag, "degree:"+(90 - mSecDegress))
-        Log.d(mTag, "cos:"+cos(90 - mSecDegress))
+        Log.d(mTag, "r:" + r)
+        Log.d(mTag, "degree:" + (90 - mSecDegress))
+        Log.d(mTag, "cos:" + cos(90 - mSecDegress))
 
 //        canvas.drawArc(RectF(0f,0f,size,size),0f,360f,true,mPaint)
     }
@@ -87,4 +93,8 @@ class ClockView : View {
         super.onDetachedFromWindow()
     }
 
+
+    override fun onTouchEvent(event: MotionEvent?): Boolean {
+        return super.onTouchEvent(event)
+    }
 }

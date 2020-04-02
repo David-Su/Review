@@ -1,7 +1,9 @@
 package suk.practice
 
+import android.content.UriMatcher
 import android.os.Bundle
 import android.util.Log
+import android.view.ViewConfiguration
 import androidx.appcompat.app.AppCompatActivity
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method
@@ -79,5 +81,6 @@ abstract class BaseActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         animatior()
         Test().lengthOfLongestSubstring("abcabcbb")
+        ViewConfiguration.get(this).scaledTouchSlop
     }
 }
