@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <!--toolbar的高度-->
-    <dimen name="toolBarSize">@dimen/abc_action_bar_default_height_material</dimen>
-    <!--toolbar的标题字体大小-->
-    <dimen name="toolBarTitleTextSize">@dimen/abc_text_size_title_material_toolbar</dimen>
-    <!--toolbar的菜单文字字体大小-->
-    <dimen name="toolBarMenuItemTextSize">@dimen/abc_text_size_button_material</dimen>
-</resources>

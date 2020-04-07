@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <color name="tabTextColor">@color/abc_hint_foreground_material_light</color>
-    <color name="tabSelectedTextColor">@color/colorAccent</color>
-</resources>
