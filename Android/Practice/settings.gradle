@@ -1,3 +1,4 @@
 rootProject.name='Practice'
 include ':app',':base','opensource'
 include ':client'
+include ':java'
