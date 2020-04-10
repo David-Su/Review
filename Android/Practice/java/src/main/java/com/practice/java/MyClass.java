@@ -1,15 +1,15 @@
 package com.practice.java;
 
 import com.practice.java.algorithm.search.BinarySearch;
-import com.practice.java.algorithm.sort.BubbleSort;
-
-import java.util.Arrays;
+import com.practice.java.algorithm.sort.QuickSort;
+import com.practice.java.algorithm.sort.SelectionSort;
+import com.practice.java.algorithm.sort.TreeSort;
 
 public class MyClass {
 
     public static void main(String[] args) {
-//        sort();
-        search();
+        sort();
+//        search();
     }
 
     private static void search(){
@@ -21,8 +21,18 @@ public class MyClass {
     private static void sort(){
         int[] array = {5, 9, 8, 18, 1, 0, 4, 700, 666, 999, 1111, 6, 1, 2, 3};
 
-        new BubbleSort().sort(array);
+//        new BubbleSort().sort(array);
+//        logArray(array);
 
+//        TreeSort treeSort = new TreeSort();
+//        TreeSort.TreeNode tree = treeSort.buildTree(array);
+//        treeSort.mPrint(tree);
+
+//        SelectionSort selectionSort = new SelectionSort();
+//        selectionSort.sort(array);
+
+        QuickSort quickSort = new QuickSort();
+        quickSort.sort(array);
         logArray(array);
     }
 
