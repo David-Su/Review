@@ -46,7 +46,6 @@ class ClockView : View {
 
             mSecDegress = (second.toDouble() + 1) / 60 * 360
             Log.d(mTag, second.toString() + "     " + mSecDegress)
-            scrollTo()
             postInvalidate()
         }
 
