@@ -1,4 +1,4 @@
-package com.practice.java;
+package com.practice.java.algorithm;
 
 import com.practice.java.algorithm.search.BinarySearch;
 import com.practice.java.algorithm.sort.QuickSort;
@@ -10,14 +10,12 @@ import java.util.LinkedList;
 import java.util.List;
 
 
-public class MyClass {
+public class Test {
 
     public static void main(String[] args) {
 //        sort();
 //        search();
         list();
-        new StringBuilder().append()
-        new StringBuffer("").append()
     }
 
     private static void search(){
@@ -58,7 +56,7 @@ public class MyClass {
                 }
                 System.out.println("arrayList时间 "+(System.currentTimeMillis()-curr));
             }
-        })
+        });
 
         Thread linked = new Thread(new Runnable() {
             @Override

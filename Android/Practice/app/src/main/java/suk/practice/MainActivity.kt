@@ -1,7 +1,10 @@
 package suk.practice
 
 import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.util.Log
 import kotlinx.android.synthetic.main.activity_main.*
@@ -18,7 +21,6 @@ class MainActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         getTask()
-
 
         btn.setOnClickListener {
             invacation().a("哈哈哈哈哈哈哈")

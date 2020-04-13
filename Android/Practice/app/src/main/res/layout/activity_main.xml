@@ -8,13 +8,15 @@
     tools:context=".MainActivity">
 
     <LinearLayout
-        android:orientation="horizontal"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
         <Button
             android:id="@+id/btn"
             android:layout_width="50dp"
             android:layout_height="wrap_content" />
+
         <Button
             android:id="@+id/btn2"
             android:layout_width="50dp"
@@ -25,8 +27,13 @@
 
 
     <suk.practice.ClockView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:layout_width="50dp"
+        android:layout_height="50dp" />
+
+    <suk.practice.scroll.ScrollView
+        android:background="@android:color/holo_blue_light"
+        android:layout_width="match_parent"
+        android:layout_height="100dp" />
 
     <suk.practice.Vg1
         android:layout_width="match_parent"
