@@ -19,6 +19,7 @@ class ServerService : Service() {
         override fun addBook(book: Book) {
             Log.d("aidl", "addBook:$book")
             books.add(book)
+            
         }
 
         override fun registerScanner(scanner: IBookScanner) {
@@ -26,6 +27,21 @@ class ServerService : Service() {
                 scanner.onScanBook(books)
             }
         }
+
+    }
+
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        return super.onStartCommand(intent, flags, startId)
+    }
+
+    override fun onRebind(intent: Intent?) {
+        super.onRebind(intent)
+
+    }
+
+    override fun onUnbind(intent: Intent?): Boolean {
+        return super.onUnbind(intent)
 
     }
 }

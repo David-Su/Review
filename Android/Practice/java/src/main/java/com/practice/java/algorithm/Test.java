@@ -14,31 +14,9 @@ import java.util.List;
 public class Test {
 
     public static void main(String[] args) {
-//        sort();
+        sort();
 //        search();
 //        list();
-
-        String s = "ababab";
-
-        String[] pres = new String[s.length() - 1];
-        String[] ends = new String[s.length() - 1];
-
-        for (int i = 1; i < s.length(); i++) {
-            pres[i - 1] = s.substring(0, s.length() - i);
-            ends[i - 1] = s.substring(i);
-        }
-
-        String longestHappy = "";
-
-        for (int i = 0; i < s.length() - 1; i++) {
-            String pre = pres[i];
-            if (pre.equals(ends[i]) && pre.length() > longestHappy.length()) {
-                longestHappy = pre;
-                break;
-            }
-        }
-
-        System.out.println("longestHappy:" + longestHappy);
     }
 
     private static void search() {
