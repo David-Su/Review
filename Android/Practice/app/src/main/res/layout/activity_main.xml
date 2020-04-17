@@ -32,8 +32,8 @@
 
 
     <suk.practice.ClockView
-        android:layout_width="50dp"
-        android:layout_height="50dp" />
+        android:layout_width="150dp"
+        android:layout_height="150dp" />
 
     <suk.practice.scroll.ScrollView
         android:background="@android:color/holo_blue_light"

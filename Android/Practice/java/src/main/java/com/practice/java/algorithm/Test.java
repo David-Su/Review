@@ -38,9 +38,32 @@ public class Test {
 //        SelectionSort selectionSort = new SelectionSort();
 //        selectionSort.sort(array);
 
-        QuickSort quickSort = new QuickSort();
-        quickSort.sort(array);
-        logArray(array);
+//        QuickSort quickSort = new QuickSort();
+//        quickSort.sort(array);
+//        logArray(array);
+
+        boolean b = canJump(new int[]{2, 3, 1, 1, 4});
+
+    }
+
+    public static boolean canJump(int[] nums) {
+        if (nums.length>0) {
+            return junm(0,nums);
+        }else {
+            return false;
+        }
+
+    }
+
+
+    private static boolean junm(int index,int[] nums){
+        if (index == nums.length -1) return true;
+        else if (index > nums.length -1) return false;
+        int step = nums[index];
+        for (int i =0;i<step;i++){
+            if (junm(index + i,nums)) return true;
+        }
+        return false;
     }
 
 

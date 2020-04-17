@@ -37,7 +37,7 @@ class MainActivity : BaseActivity() {
                 .into(iv)
         }
 
-
+        bindService()
 
     }
 
