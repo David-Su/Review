@@ -15,6 +15,7 @@ class Vg1(context: Context?, attrs: AttributeSet?) : LinearLayout(context, attrs
 
 
     override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
+        translationX
         Log.d("suk","  "+javaClass.simpleName+"    "+"dispatchTouchEvent  "+Util.getAction(ev))
         return super.dispatchTouchEvent(ev)
     }

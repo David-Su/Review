@@ -6,7 +6,8 @@ package com.practice.java.algorithm.sort;
  * @time 2020/4/10 10:38
  * @des
  */
-public class TreeSort {
+public class TreeSort implements Strategy {
+
 
     public static class TreeNode {
         public Integer value;
@@ -50,13 +51,24 @@ public class TreeSort {
         }
     }
 
-    public void mPrint(TreeNode root){
-        if (root!=null){
-            mPrint(root.left);
-            System.out.println(root.value);
-            mPrint(root.right);
+    private int index = 0;
+
+    public void mPrint(TreeNode root, int[] array) {
+        if (root != null) {
+            mPrint(root.left, array);
+//            System.out.println(root.value);
+            array[index++] = root.value;
+            mPrint(root.right, array);
         }
 
     }
+
+    @Override
+    public int[] sort(int[] array) {
+        TreeNode treeNode = buildTree(array);
+        mPrint(treeNode, array);
+        return array;
+    }
+
 
 }

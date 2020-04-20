@@ -2,10 +2,14 @@ package suk.practice
 
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
+import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Bundle
+import android.os.IBinder
 import android.util.Log
 import com.bumptech.glide.Glide
 import io.reactivex.Observable
@@ -15,6 +19,7 @@ import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
+import suk.practice.server.ServerService
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadFactory
@@ -37,7 +42,15 @@ class MainActivity : BaseActivity() {
                 .into(iv)
         }
 
-        bindService()
+        bindService(Intent(this, ServerService::class.java),object :ServiceConnection{
+            override fun onServiceDisconnected(name: ComponentName?) {
+            }
+
+            override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+                Log.d("客户端",service?.hashCode().toString())
+            }
+
+        }, Context.BIND_AUTO_CREATE)
 
     }
 

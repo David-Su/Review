@@ -5,12 +5,12 @@ package com.practice.java.algorithm.sort;
  * @time 2020/4/9 14:09
  * @des
  */
-public class BubbleSort {
+public class BubbleSort implements Strategy {
 
     //执行次数：
     //设数组大小为n，(4n-1)+(4n-2)+...+2+1=4n*(n/2)=(n^2)/2
     //时间复杂度：O(n^2)
-    public void sort(int[] array) {
+    public int[] sort(int[] array) {
         for (int i = array.length; i > 0; i--) {
             for (int k = 0; k < i - 1; k++) {
                 if (array[k] > array[k + 1]) {
@@ -20,6 +20,7 @@ public class BubbleSort {
                 }
             }
         }
+        return array;
     }
 
 }

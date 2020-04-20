@@ -10,4 +10,5 @@ interface IServiceManager {
 
     void registerScanner(IBookScanner scanner);
 
+void getBinder(IBinder binder);
 }

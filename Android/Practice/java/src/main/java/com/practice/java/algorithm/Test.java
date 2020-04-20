@@ -1,8 +1,10 @@
 package com.practice.java.algorithm;
 
 import com.practice.java.algorithm.search.BinarySearch;
+import com.practice.java.algorithm.sort.BubbleSort;
 import com.practice.java.algorithm.sort.QuickSort;
 import com.practice.java.algorithm.sort.SelectionSort;
+import com.practice.java.algorithm.sort.Sorter;
 import com.practice.java.algorithm.sort.TreeSort;
 
 import java.lang.reflect.Array;
@@ -27,6 +29,13 @@ public class Test {
 
     private static void sort() {
         int[] array = {5, 9, 8, 18, 1, 0, 4, 700, 666, 999, 1111, 6, 1, 2, 3};
+        int[] result = new Sorter()
+//                .sortStrategy(new BubbleSort())
+//                .sortStrategy(new TreeSort())
+//                .sortStrategy(new SelectionSort())
+                .sortStrategy(new QuickSort())
+                .sort(array);
+        logArray(result);
 
 //        new BubbleSort().sort(array);
 //        logArray(array);
@@ -42,28 +51,6 @@ public class Test {
 //        quickSort.sort(array);
 //        logArray(array);
 
-        boolean b = canJump(new int[]{2, 3, 1, 1, 4});
-
-    }
-
-    public static boolean canJump(int[] nums) {
-        if (nums.length>0) {
-            return junm(0,nums);
-        }else {
-            return false;
-        }
-
-    }
-
-
-    private static boolean junm(int index,int[] nums){
-        if (index == nums.length -1) return true;
-        else if (index > nums.length -1) return false;
-        int step = nums[index];
-        for (int i =0;i<step;i++){
-            if (junm(index + i,nums)) return true;
-        }
-        return false;
     }
 
 
