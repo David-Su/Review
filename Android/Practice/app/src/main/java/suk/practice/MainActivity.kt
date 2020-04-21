@@ -52,6 +52,7 @@ class MainActivity : BaseActivity() {
 
         }, Context.BIND_AUTO_CREATE)
 
+        intent.putStringArrayListExtra()
     }
 
     override fun onDestroy() {
