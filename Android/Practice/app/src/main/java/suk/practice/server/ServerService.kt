@@ -35,7 +35,6 @@ class ServerService : Service() {
 
         }
         Log.d("服务端",binder.hashCode().toString())
-        TreeMap
         return binder;
     }
 

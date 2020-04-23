@@ -2,15 +2,13 @@ package suk.practice
 
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
-import android.content.ComponentName
-import android.content.Context
-import android.content.Intent
-import android.content.ServiceConnection
+import android.content.*
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
+import android.view.MotionEvent
 import com.bumptech.glide.Glide
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -51,8 +49,11 @@ class MainActivity : BaseActivity() {
             }
 
         }, Context.BIND_AUTO_CREATE)
+    }
 
-        intent.putStringArrayListExtra()
+    override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
+        Log.d("MainActivity","dispatchTouchEvent")
+        return super.dispatchTouchEvent(ev)
     }
 
     override fun onDestroy() {

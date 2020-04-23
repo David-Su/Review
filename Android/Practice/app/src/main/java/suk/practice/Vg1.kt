@@ -21,6 +21,7 @@ class Vg1(context: Context?, attrs: AttributeSet?) : LinearLayout(context, attrs
     }
 
     override fun onInterceptTouchEvent(ev: MotionEvent?): Boolean {
+        invalidate()
         Log.d("suk","  "+javaClass.simpleName+"    "+"onInterceptTouchEvent  "+Util.getAction(ev))
         return super.onInterceptTouchEvent(ev)
     }

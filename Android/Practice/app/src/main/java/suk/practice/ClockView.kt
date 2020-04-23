@@ -92,8 +92,4 @@ class ClockView : View {
         super.onDetachedFromWindow()
     }
 
-
-    override fun onTouchEvent(event: MotionEvent?): Boolean {
-        return super.onTouchEvent(event)
-    }
 }
