@@ -25,7 +25,6 @@ abstract class BaseActivity : AppCompatActivity() {
     }
 
     fun animatior() {
-
     }
 
     fun hashMap(){

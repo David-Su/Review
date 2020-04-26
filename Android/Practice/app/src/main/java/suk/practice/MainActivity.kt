@@ -49,6 +49,7 @@ class MainActivity : BaseActivity() {
             }
 
         }, Context.BIND_AUTO_CREATE)
+
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
