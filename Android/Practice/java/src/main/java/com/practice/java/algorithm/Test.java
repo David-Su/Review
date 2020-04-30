@@ -2,6 +2,7 @@ package com.practice.java.algorithm;
 
 import com.practice.java.algorithm.search.BinarySearch;
 import com.practice.java.algorithm.sort.BubbleSort;
+import com.practice.java.algorithm.sort.InsertSort;
 import com.practice.java.algorithm.sort.QuickSort;
 import com.practice.java.algorithm.sort.SelectionSort;
 import com.practice.java.algorithm.sort.Sorter;
@@ -9,8 +10,11 @@ import com.practice.java.algorithm.sort.TreeSort;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 
 
 public class Test {
@@ -28,12 +32,14 @@ public class Test {
     }
 
     private static void sort() {
-        int[] array = {5, 9, 8, 18, 1, 0, 4, 700, 666, 999, 1111, 6, 1, 2, 3};
+        int[] array = getRandomArray();
+        logArray(array);
         int[] result = new Sorter()
 //                .sortStrategy(new BubbleSort())
 //                .sortStrategy(new TreeSort())
 //                .sortStrategy(new SelectionSort())
-                .sortStrategy(new QuickSort())
+//                .sortStrategy(new QuickSort())
+                .sortStrategy(new InsertSort())
                 .sort(array);
         logArray(result);
 
@@ -93,7 +99,13 @@ public class Test {
         System.out.println(sb.toString());
     }
 
-
-
+    private static int[] getRandomArray() {
+        Random random = new Random();
+        int[] array = new int[Math.abs(random.nextInt(20))];
+        for (int i = 0; i < array.length; i++) {
+            array[i] = random.nextInt(100);
+        }
+        return array;
+    }
 
 }
