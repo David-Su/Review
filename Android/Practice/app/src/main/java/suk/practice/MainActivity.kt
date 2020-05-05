@@ -18,6 +18,9 @@ import kotlinx.android.synthetic.main.activity_main.*
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import suk.practice.server.ServerService
+import java.lang.ref.SoftReference
+import java.lang.ref.WeakReference
+import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadFactory
@@ -48,6 +51,10 @@ class MainActivity : BaseActivity() {
 
         }, Context.BIND_AUTO_CREATE)
 
+
+        SoftReference<String>("")
+        WeakReference<String>("")
+        WeakHashMap<Any,Any>().put()
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
