@@ -2,8 +2,10 @@ package suk.practice
 
 import android.annotation.SuppressLint
 import android.content.*
+import android.net.Uri
 import android.os.Bundle
 import android.os.IBinder
+import android.provider.Settings
 import android.util.Log
 import android.view.Gravity
 import android.view.MotionEvent
@@ -41,6 +43,9 @@ class MainActivity : BaseActivity() {
 
         }, Context.BIND_AUTO_CREATE)
 
+        val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+        startActivityForResult(intent, 1)
+
 //        if (Settings.canDrawOverlays(this)) {
 //            val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:"+packageName))
 //            startActivityForResult(intent, 1)
@@ -49,7 +54,7 @@ class MainActivity : BaseActivity() {
 //        }
 
 
-        addWindow()
+//        addWindow()
 
 
     }
