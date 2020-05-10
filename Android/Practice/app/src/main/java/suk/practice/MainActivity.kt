@@ -25,6 +25,7 @@ class MainActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         getTask()
+        btn.layout()
         btn.setOnClickListener {
             invacation().a("哈哈哈哈哈哈哈")
             Glide.with(this)
