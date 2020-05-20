@@ -4,7 +4,9 @@ import android.annotation.SuppressLint
 import android.content.*
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
 import android.os.IBinder
+import android.os.Message
 import android.provider.Settings
 import android.util.Log
 import android.view.Gravity
@@ -52,8 +54,6 @@ class MainActivity : BaseActivity() {
 //        } else {
 //            addWindow()
 //        }
-
-
 //        addWindow()
 
 
