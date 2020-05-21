@@ -77,7 +77,6 @@ class MainActivity : BaseActivity() {
         wm.addView(imageView, lp)
 
 
-
         imageView.setOnTouchListener { v, event ->
             var startX = 0
             var startY = 0
