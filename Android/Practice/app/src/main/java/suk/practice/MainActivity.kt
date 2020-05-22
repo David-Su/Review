@@ -18,6 +18,7 @@ import com.bumptech.glide.Glide
 import io.reactivex.disposables.Disposable
 import kotlinx.android.synthetic.main.activity_main.*
 import suk.practice.server.ServerService
+import kotlin.concurrent.thread
 
 class MainActivity : BaseActivity() {
 
@@ -45,8 +46,8 @@ class MainActivity : BaseActivity() {
 
         }, Context.BIND_AUTO_CREATE)
 
-        val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
-        startActivityForResult(intent, 1)
+//        val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+//        startActivityForResult(intent, 1)
 
 //        if (Settings.canDrawOverlays(this)) {
 //            val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:"+packageName))
@@ -56,6 +57,12 @@ class MainActivity : BaseActivity() {
 //        }
 //        addWindow()
 
+
+        thread {
+            while (true) {
+                Thread.sleep(500L)
+            }
+        }
 
     }
 
