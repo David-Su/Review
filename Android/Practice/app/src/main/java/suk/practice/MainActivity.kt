@@ -28,6 +28,8 @@ class MainActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         getTask()
+        getExternalFilesDir()
+        externalCacheDir
         btn.setOnClickListener {
             invacation().a("哈哈哈哈哈哈哈")
             Glide.with(this)
