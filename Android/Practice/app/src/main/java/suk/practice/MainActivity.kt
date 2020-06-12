@@ -18,6 +18,8 @@ import com.bumptech.glide.Glide
 import io.reactivex.disposables.Disposable
 import kotlinx.android.synthetic.main.activity_main.*
 import suk.practice.server.ServerService
+import java.lang.Exception
+import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.thread
 
 class MainActivity : BaseActivity() {
@@ -28,7 +30,6 @@ class MainActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         getTask()
-        getExternalFilesDir()
         externalCacheDir
         btn.setOnClickListener {
             invacation().a("哈哈哈哈哈哈哈")
@@ -60,10 +61,23 @@ class MainActivity : BaseActivity() {
 //        addWindow()
 
 
+        val lock = ReentrantLock()
+
         thread {
-            while (true) {
-                Thread.sleep(500L)
+            lock.lock()
+            try {
+
+                lock.lock() //可重入
+                try {
+
+                } finally {
+                    lock.unlock()
+                }
+
+            } finally {
+                lock.unlock()
             }
+
         }
 
     }
