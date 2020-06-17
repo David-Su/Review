@@ -14,7 +14,9 @@ import android.view.MotionEvent
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.ImageView
+import android.widget.TextView
 import com.bumptech.glide.Glide
+import com.example.anno.RuntimeAnno
 import io.reactivex.disposables.Disposable
 import kotlinx.android.synthetic.main.activity_main.*
 import suk.practice.server.ServerService
@@ -25,6 +27,9 @@ import kotlin.concurrent.thread
 class MainActivity : BaseActivity() {
 
     lateinit var subscribe: Disposable
+
+    @RuntimeAnno(666)
+    private val obj= Any()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,26 +64,6 @@ class MainActivity : BaseActivity() {
 //            addWindow()
 //        }
 //        addWindow()
-
-
-        val lock = ReentrantLock()
-
-        thread {
-            lock.lock()
-            try {
-
-                lock.lock() //可重入
-                try {
-
-                } finally {
-                    lock.unlock()
-                }
-
-            } finally {
-                lock.unlock()
-            }
-
-        }
 
     }
 
