@@ -1,0 +1,6 @@
+include ':anno'
+include ':processor'
+rootProject.name='Practice'
+include ':app',':base','opensource'
+include ':client'
+include ':java'
