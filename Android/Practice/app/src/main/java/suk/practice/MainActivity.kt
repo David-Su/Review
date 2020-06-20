@@ -9,6 +9,8 @@ import android.os.IBinder
 import android.os.Message
 import android.provider.Settings
 import android.util.Log
+import android.util.SparseArray
+import android.util.SparseBooleanArray
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.ViewGroup
@@ -64,7 +66,8 @@ class MainActivity : BaseActivity() {
 //            addWindow()
 //        }
 //        addWindow()
-
+        SparseBooleanArray
+SparseArray
     }
 
     @SuppressLint("ClickableViewAccessibility")
