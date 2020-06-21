@@ -19,6 +19,8 @@ import android.widget.ImageView
 import android.widget.TextView
 import com.bumptech.glide.Glide
 import com.example.anno.RuntimeAnno
+import dalvik.system.DexClassLoader
+import dalvik.system.PathClassLoader
 import io.reactivex.disposables.Disposable
 import kotlinx.android.synthetic.main.activity_main.*
 import suk.practice.server.ServerService
@@ -66,8 +68,6 @@ class MainActivity : BaseActivity() {
 //            addWindow()
 //        }
 //        addWindow()
-        SparseBooleanArray
-SparseArray
     }
 
     @SuppressLint("ClickableViewAccessibility")
