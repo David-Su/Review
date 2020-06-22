@@ -68,6 +68,12 @@ class MainActivity : BaseActivity() {
 //            addWindow()
 //        }
 //        addWindow()
+
+        var loader = classLoader
+        while (loader != null) {
+            Log.d("loader:",loader.toString())
+            loader = loader.parent
+        }
     }
 
     @SuppressLint("ClickableViewAccessibility")
