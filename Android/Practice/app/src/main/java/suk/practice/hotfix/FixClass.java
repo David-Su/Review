@@ -16,7 +16,7 @@ public class FixClass {
     }
 
     public void run(Context context) {
-        Toast.makeText(context, "已修复", Toast.LENGTH_SHORT).show();
+        Toast.makeText(context, "未修复", Toast.LENGTH_SHORT).show();
     }
 
 }

@@ -16,6 +16,7 @@ import android.widget.ImageView
 import com.bumptech.glide.Glide
 import com.example.anno.RuntimeAnno
 import dalvik.system.DexClassLoader
+import dalvik.system.PathClassLoader
 import io.reactivex.disposables.Disposable
 import kotlinx.android.synthetic.main.activity_main.*
 import suk.practice.hotfix.FixClass
@@ -23,6 +24,7 @@ import suk.practice.server.ServerService
 import java.io.File
 import java.io.FileOutputStream
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 class MainActivity : BaseActivity() {
 
@@ -43,74 +45,8 @@ class MainActivity : BaseActivity() {
                 )
                 .into(iv)
         }
+        FixClass().run(this)
         btn2.setOnClickListener {
-            //把dex文件放到cache文件夹（其实可以直接放在外存上）
-            val ins = assets.open("FixClass.dex")
-            val file = File(cacheDir, "FixClass.dex")
-            val outs = FileOutputStream(file)
-            val buff = ByteArray(1024)
-            var length = -1
-            while (ins.read(buff).takeIf { it != -1 }?.also { length = it } != null) {
-                outs.write(buff, 0, length)
-            }
-            //加载dex。加载后dex会以Element数组的形式保存在DexClassLoader
-            val loader = DexClassLoader(file.absolutePath, cacheDir.absolutePath, null, null)
-            loader.loadClass("suk.practice.hotfix.FixClass")
-
-
-            fun getDexElements(target: Any): Any {
-                //获取dexPathList
-                val pathList = DexClassLoader::class
-                    .java
-                    .superclass
-                    .getDeclaredField("pathList")
-                    .also { it.isAccessible = true }
-                    .get(target)
-                //获取dexElements
-                val dexElements = Class
-                    .forName("dalvik.system.DexPathList")
-                    .getDeclaredField("dexElements")
-                    .also { it.isAccessible = true }
-                    .get(pathList)
-                return dexElements
-            }
-
-            fun setDexElements(elements: Any, target: Any) {
-                //获取dexPathList
-                val pathList = DexClassLoader::class
-                    .java
-                    .superclass
-                    .getDeclaredField("pathList")
-                    .also { it.isAccessible = true }
-                    .get(target)
-                Class
-                    .forName("dalvik.system.DexPathList")
-                    .getDeclaredField("dexElements")
-                    .also { it.isAccessible = true }
-                    .set(pathList, elements)
-            }
-
-
-            val newDexElements = getDexElements(loader) as Array<*>
-            val oldDexElements = getDexElements(classLoader) as Array<*>
-
-
-            //新旧elements合并，新的在前。
-
-            val elements = java.lang.reflect.Array.newInstance(
-                oldDexElements.javaClass.componentType,
-                newDexElements.size + oldDexElements.size
-            ) as Array<Any>
-            System.arraycopy(newDexElements, 0, elements, 0, newDexElements.size)
-            System.arraycopy(oldDexElements, 0, elements, newDexElements.size, oldDexElements.size)
-
-            //把合并好的elements设置给PathClassLoader
-            setDexElements(elements, classLoader)
-
-            getDexElements(classLoader)
-            for (ele in getDexElements(classLoader) as Array<*>){
-                Log.d("hotfix", ele.toString())
-            }
 
             FixClass().run(this)
         }
