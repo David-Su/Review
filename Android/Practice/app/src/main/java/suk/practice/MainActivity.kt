@@ -47,7 +47,7 @@ class MainActivity : BaseActivity() {
         }
         FixClass().run(this)
         btn2.setOnClickListener {
-
+HashSet
             FixClass().run(this)
         }
         bindService(Intent(this, ServerService::class.java), object : ServiceConnection {
