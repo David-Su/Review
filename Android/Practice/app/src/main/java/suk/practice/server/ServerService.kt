@@ -24,14 +24,15 @@ class ServerService : Service() {
 
             }
 
+            override fun addOutBook(book: Book?) {
+            }
+
             override fun registerScanner(scanner: IBookScanner) {
                 timer(period = 1000L) {
                     scanner.onScanBook(books)
                 }
             }
 
-            override fun getBinder(binder: IBinder?) {
-            }
 
         }
         Log.d("服务端",binder.hashCode().toString())

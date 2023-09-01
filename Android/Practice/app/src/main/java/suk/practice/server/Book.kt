@@ -9,26 +9,36 @@ import android.os.Parcelable
  * @des
  */
 data class Book(
-    val name: String,
-    val price: Int
+    var name: String? = null,
+    var price: Int? = null
 ) : Parcelable {
-    constructor(source: Parcel) : this(
-        source.readString(),
-        source.readInt()
-    )
-
-    override fun describeContents() = 0
-
-    override fun writeToParcel(dest: Parcel, flags: Int) = with(dest) {
-        writeString(name)
-        writeInt(price)
+    constructor(parcel: Parcel) : this(
+        parcel.readString(),
+        parcel.readValue(Int::class.java.classLoader) as? Int
+    ) {
     }
 
-    companion object {
-        @JvmField
-        val CREATOR: Parcelable.Creator<Book> = object : Parcelable.Creator<Book> {
-            override fun createFromParcel(source: Parcel): Book = Book(source)
-            override fun newArray(size: Int): Array<Book?> = arrayOfNulls(size)
+    override fun writeToParcel(parcel: Parcel, flags: Int) {
+        parcel.writeString(name)
+        parcel.writeValue(price)
+    }
+
+    fun readFromParcel(dest: Parcel) = with(dest) {
+        name = readString()
+        price = readInt()
+    }
+
+    override fun describeContents(): Int {
+        return 0
+    }
+
+    companion object CREATOR : Parcelable.Creator<Book> {
+        override fun createFromParcel(parcel: Parcel): Book {
+            return Book(parcel)
+        }
+
+        override fun newArray(size: Int): Array<Book?> {
+            return arrayOfNulls(size)
         }
     }
 }

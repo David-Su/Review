@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
 import android.view.View
+import android.view.animation.AccelerateInterpolator
 import suk.practice.server.Book
 import suk.practice.server.IBookScanner
 import suk.practice.server.IServiceManager
@@ -22,7 +23,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun bind(view: View) {
-Socket("",123)
         bindService(
             Intent().setAction("server.ServerService").setPackage("suk.practice"),
             object : ServiceConnection {

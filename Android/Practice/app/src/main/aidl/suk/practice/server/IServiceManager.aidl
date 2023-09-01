@@ -8,7 +8,8 @@ interface IServiceManager {
 
     void addBook(in Book book);
 
+    void addOutBook(out Book book);
+
     void registerScanner(IBookScanner scanner);
 
-void getBinder(IBinder binder);
 }
