@@ -26,6 +26,8 @@ dependencies {
     api fileTree(dir: 'libs', include: ['*.jar'])
     api rootProject.ext.deps.kotlin_stdlib_jdk7
     api rootProject.ext.deps.appcompat
+    api rootProject.ext.deps.core
+    api rootProject.ext.deps.core_ktx
     api rootProject.ext.deps.material
     api rootProject.ext.deps.flexbox
     api rootProject.ext.deps.constraintlayout

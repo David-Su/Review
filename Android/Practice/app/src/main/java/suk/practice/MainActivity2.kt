@@ -18,7 +18,6 @@ class MainActivity2 : BaseActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-
         getTask()
         Log.d("startActivity", "MainActivity2 onCreate")
     }
