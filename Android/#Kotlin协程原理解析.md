@@ -317,5 +317,22 @@ public class CoroutineDemo {
 
 
 ## 协程的运行过程
+### 开启协程
+开启协程用的是CoroutineScope的launch方法
+```kotlin
+public fun CoroutineScope.launch(
+    context: CoroutineContext = EmptyCoroutineContext,
+    start: CoroutineStart = CoroutineStart.DEFAULT,
+    block: suspend CoroutineScope.() -> Unit
+): Job {
+    val newContext = newCoroutineContext(context)
+    val coroutine = if (start.isLazy)
+        LazyStandaloneCoroutine(newContext, block) else
+        StandaloneCoroutine(newContext, active = true)
+    coroutine.start(start, coroutine, block)
+    return coroutine
+}
+```
+流程图
 
-![图片替换文字](https://raw.githubusercontent.com/David-Su/Review/d95426c3366bca6a6fedbe73cee6e755ce9e0054/Android/%E9%99%84%E4%BB%B6/coroutine_launch.svg)
+![图片替换文字](https://raw.githubusercontent.com/David-Su/Review/31bbd0e02fdd559ebf84dce6dc3da61f86addd89/Android/%E9%99%84%E4%BB%B6/coroutine_launch.svg)
