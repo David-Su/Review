@@ -318,7 +318,7 @@ public class CoroutineDemo {
 
 ## 协程的运行过程
 ### 开启协程
-开启协程用的是CoroutineScope的launch方法
+#### 开启协程用的是CoroutineScope的launch方法
 ```kotlin
 public fun CoroutineScope.launch(
     context: CoroutineContext = EmptyCoroutineContext,
@@ -333,6 +333,148 @@ public fun CoroutineScope.launch(
     return coroutine
 }
 ```
-流程图
+#### newCoroutineContext(context)将传入的Context与当前协程的Context合并
+```kotlin
+public actual fun CoroutineScope.newCoroutineContext(context: CoroutineContext): CoroutineContext {
+    // 1
+    val combined = foldCopies(coroutineContext, context, true)
+    // 2
+    val debug = if (DEBUG) combined + CoroutineId(COROUTINE_ID.incrementAndGet()) else combined
+    // 3
+    return if (combined !== Dispatchers.Default && combined[ContinuationInterceptor] == null)
+        debug + Dispatchers.Default else debug
+}
+```
+1：一般情况下，就是将传入的Context与当前协程的Context相加  
+2：非DEBUG模式，直接使用combined   
+3：确保了返回的Context一定有拦截器（一般的调度器都是拦截器，如：Dispatchers.Default），如果没有拦截器就给combined加一个Dispatchers.Default
+#### 默认情况下，创建一个新的StandaloneCoroutine协程实例
+该实例会关联父协程的作用域（此处没有父协程，所以忽略这一层），并且提供后续步骤所需要的上下文。
+```kotlin
+private open class StandaloneCoroutine(
+    parentContext: CoroutineContext,
+    active: Boolean
+) : AbstractCoroutine<Unit>(parentContext, initParentJob = true, active = active) {
+    override fun handleJobException(exception: Throwable): Boolean {
+        handleCoroutineException(context, exception)
+        return true
+    }
+}
+```
+#### coroutine.start(start, coroutine, block)默认情况下会调用CoroutineStart.DEFAULT的invoke方法
+```kotlin
+//StandaloneCoroutine的start方法
+public abstract class AbstractCoroutine<in T>(
+    parentContext: CoroutineContext,
+    initParentJob: Boolean,
+    active: Boolean
+) : JobSupport(active), Job, Continuation<T>, CoroutineScope {
+    public fun <R> start(start: CoroutineStart, receiver: R, block: suspend R.() -> T) {
+        start(block, receiver, this)
+    }
+}
+//StandaloneCoroutine的start方法会调用CoroutineStart.DEFAULT的invoke方法
+public enum class CoroutineStart {
+    DEFAULT,
+    ...
+    public operator fun <R, T> invoke(block: suspend R.() -> T, receiver: R, completion: Continuation<T>): Unit =
+        when (this) {
+            DEFAULT -> block.startCoroutineCancellable(receiver, completion)
+            ATOMIC -> block.startCoroutine(receiver, completion)
+            UNDISPATCHED -> block.startCoroutineUndispatched(receiver, completion)
+            LAZY -> Unit // will start lazily
+        }
+}
+
+```
+#### 进入block.startCoroutineCancellable(receiver, completion)
+注意这里的receiver和completion都为刚刚创建的StandaloneCoroutine协程实例
+```kotlin
+internal fun <R, T> (suspend (R) -> T).startCoroutineCancellable(
+    receiver: R, 
+    completion: Continuation<T>,
+    onCancellation: ((cause: Throwable) -> Unit)? = null
+) = runSafely(completion) {
+    // 1
+    createCoroutineUnintercepted(receiver, completion)
+    // 2
+    .intercepted()
+    .resumeCancellableWith(Result.success(Unit), onCancellation)
+}
+```
+##### createCoroutineUnintercepted(receiver, completion)创建SuspendLambda对象
+```kotlin
+public actual fun <R, T> (suspend R.() -> T).createCoroutineUnintercepted(
+    receiver: R,
+    completion: Continuation<T>
+): Continuation<Unit> {
+    // 1
+    val probeCompletion = probeCoroutineCreated(completion)
+    return if (this is BaseContinuationImpl)
+        // 2
+        create(receiver, probeCompletion)
+    else {
+        createCoroutineFromSuspendFunction(probeCompletion) {
+            (this as Function2<R, Continuation<T>, Any?>).invoke(receiver, it)
+        }
+    }
+}
+```
+1：probeCoroutineCreated为调试所用的api，正式环境会直接返回completion。所以probeCompletion就是completion。  
+2：this即(suspend R.() -> T)类型的当前对象，也就是通过launch{}开启协程所传入的一个函数类型对象。前面介绍CPS转换的时候说过，(suspend R.() -> T)类型在编译的时候会转换成SuspendLambda的子类，SuspendLambda的基类是BaseContinuationImpl所以会走create方法。
+
+在BaseContinuationImpl中create并没有实现，具体的实现在CPS转换后生成的类中
+```java
+internal abstract class BaseContinuationImpl(
+    public val completion: Continuation<Any?>?
+) {
+    public open fun create(value: Any?, completion: Continuation<*>): Continuation<Unit> {
+        throw UnsupportedOperationException("create(Any?;Continuation) has not been overridden")
+    }
+}
+```
+
+以下是某个(suspend R.() -> T)类型经过CPS转换后的类，可以看到create方法就是调用了基类的两个参数的构造。
+```java
+final class MainActivity$onCreate$1 extends SuspendLambda implements Function2 {
+   int I$0;
+   Object L$0;
+   Object L$1;
+   int label;
+   final MainActivity this$0;
+
+   MainActivity$onCreate$1(MainActivity var1, Continuation var2) {
+      super(2, var2);
+      this.this$0 = var1;
+   }
+
+   public final Continuation create(Object var1, Continuation var2) {
+      return (Continuation)(new MainActivity$onCreate$1(this.this$0, var2));
+   }
+
+   ...
+
+}
+```
+
+继续往上跟踪,SuspendLambda的两个参数构造又网上调用了ContinuationImpl的一个参数的构造。
+```kotlin
+internal abstract class SuspendLambda(
+    public override val arity: Int,
+    completion: Continuation<Any?>?
+) : ContinuationImpl(completion), FunctionBase<Any?>, SuspendFunction {
+    ...
+}
+```
+
+```kotlin
+internal abstract class ContinuationImpl(
+    completion: Continuation<Any?>?,
+    private val _context: CoroutineContext?
+) : BaseContinuationImpl(completion) {
+    constructor(completion: Continuation<Any?>?) : this(completion, completion?.context)
+}
+```
+
 
 ![图片替换文字](https://raw.githubusercontent.com/David-Su/Review/31bbd0e02fdd559ebf84dce6dc3da61f86addd89/Android/%E9%99%84%E4%BB%B6/coroutine_launch.svg)
