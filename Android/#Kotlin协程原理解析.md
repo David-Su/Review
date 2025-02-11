@@ -457,7 +457,7 @@ final class MainActivity$onCreate$1 extends SuspendLambda implements Function2 {
 }
 ```
 
-继续往上跟踪,SuspendLambda的两个参数构造又网上调用了ContinuationImpl的一个参数的构造。
+继续往上跟踪，SuspendLambda的两个参数构造又网上调用了ContinuationImpl的一个参数的构造。
 ```kotlin
 internal abstract class SuspendLambda(
     public override val arity: Int,
@@ -467,12 +467,32 @@ internal abstract class SuspendLambda(
 }
 ```
 
+再继续往上追踪，ContinuationImpl的一个参数的构造会调用自身两个参数的构造并将传入的completion的Context保存起来。
 ```kotlin
 internal abstract class ContinuationImpl(
     completion: Continuation<Any?>?,
     private val _context: CoroutineContext?
 ) : BaseContinuationImpl(completion) {
+
     constructor(completion: Continuation<Any?>?) : this(completion, completion?.context)
+
+    public override val context: CoroutineContext
+        get() = _context!!
+
+    ...
+}
+```
+
+#### intercepted()生成DispatchedContinuation
+```kotlin
+internal abstract class ContinuationImpl(
+    completion: Continuation<Any?>?,
+    private val _context: CoroutineContext?
+) : BaseContinuationImpl(completion) {
+    public fun intercepted(): Continuation<Any?> =
+        intercepted
+            ?: (context[ContinuationInterceptor]?.interceptContinuation(this) ?: this)
+                .also { intercepted = it }
 }
 ```
 
