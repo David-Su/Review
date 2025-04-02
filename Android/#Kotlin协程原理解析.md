@@ -317,6 +317,12 @@ public class CoroutineDemo {
 
 
 ## 协程的运行过程
+以最简单的开启协程的方式举例
+```kotlin
+GlobalScope.launch {
+    //todo
+}
+```
 ### 开启协程
 #### 开启协程用的是CoroutineScope的launch方法
 ```kotlin
@@ -325,15 +331,18 @@ public fun CoroutineScope.launch(
     start: CoroutineStart = CoroutineStart.DEFAULT,
     block: suspend CoroutineScope.() -> Unit
 ): Job {
+    // 1
     val newContext = newCoroutineContext(context)
+    // 2
     val coroutine = if (start.isLazy)
         LazyStandaloneCoroutine(newContext, block) else
         StandaloneCoroutine(newContext, active = true)
+    // 3
     coroutine.start(start, coroutine, block)
     return coroutine
 }
 ```
-#### newCoroutineContext(context)将传入的Context与当前协程的Context合并
+##### 1：newCoroutineContext(context)将传入的Context与当前协程的Context合并
 ```kotlin
 public actual fun CoroutineScope.newCoroutineContext(context: CoroutineContext): CoroutineContext {
     // 1
@@ -348,7 +357,7 @@ public actual fun CoroutineScope.newCoroutineContext(context: CoroutineContext):
 1：一般情况下，就是将传入的Context与当前协程的Context相加  
 2：非DEBUG模式，直接使用combined   
 3：确保了返回的Context一定有拦截器（一般的调度器都是拦截器，如：Dispatchers.Default），如果没有拦截器就给combined加一个Dispatchers.Default
-#### 默认情况下，创建一个新的StandaloneCoroutine协程实例
+##### 2：默认情况下，创建一个新的StandaloneCoroutine协程实例
 该实例会关联父协程的作用域（此处没有父协程，所以忽略这一层），并且提供后续步骤所需要的上下文。
 ```kotlin
 private open class StandaloneCoroutine(
@@ -361,7 +370,7 @@ private open class StandaloneCoroutine(
     }
 }
 ```
-#### coroutine.start(start, coroutine, block)默认情况下会调用CoroutineStart.DEFAULT的invoke方法
+##### 3：coroutine.start(start, coroutine, block)默认情况下会调用CoroutineStart.DEFAULT的invoke方法
 ```kotlin
 //StandaloneCoroutine的start方法
 public abstract class AbstractCoroutine<in T>(
@@ -399,10 +408,11 @@ internal fun <R, T> (suspend (R) -> T).startCoroutineCancellable(
     createCoroutineUnintercepted(receiver, completion)
     // 2
     .intercepted()
+    // 3
     .resumeCancellableWith(Result.success(Unit), onCancellation)
 }
 ```
-##### createCoroutineUnintercepted(receiver, completion)创建SuspendLambda对象
+##### 1：createCoroutineUnintercepted(receiver, completion)创建SuspendLambda对象
 ```kotlin
 public actual fun <R, T> (suspend R.() -> T).createCoroutineUnintercepted(
     receiver: R,
@@ -483,7 +493,7 @@ internal abstract class ContinuationImpl(
 }
 ```
 
-#### intercepted()生成DispatchedContinuation
+##### 2：intercepted()生成DispatchedContinuation
 ```kotlin
 internal abstract class ContinuationImpl(
     completion: Continuation<Any?>?,
@@ -495,6 +505,6 @@ internal abstract class ContinuationImpl(
                 .also { intercepted = it }
 }
 ```
-
+##### 3：resumeCancellableWith使用调度器执行逻辑代码
 
 ![图片替换文字](https://raw.githubusercontent.com/David-Su/Review/31bbd0e02fdd559ebf84dce6dc3da61f86addd89/Android/%E9%99%84%E4%BB%B6/coroutine_launch.svg)
