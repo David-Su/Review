@@ -505,6 +505,11 @@ internal abstract class ContinuationImpl(
                 .also { intercepted = it }
 }
 ```
+ContinuationInterceptor是一个CoroutineContext.Element，也就是context内的组成元素。
+context[ContinuationInterceptor]这种形式的代码可以从CoroutineContext获取到其中的ContinuationInterceptor。接着调用这个ContinuationInterceptor的interceptContinuation方法并把this作为参数传入。
+
+开启协程的调度器Dispatchers.Default就是一个ContinuationInterceptor，以下是它的interceptContinuation方法实现。
 ##### 3：resumeCancellableWith使用调度器执行逻辑代码
+
 
 ![图片替换文字](https://raw.githubusercontent.com/David-Su/Review/31bbd0e02fdd559ebf84dce6dc3da61f86addd89/Android/%E9%99%84%E4%BB%B6/coroutine_launch.svg)
