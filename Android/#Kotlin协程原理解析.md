@@ -345,18 +345,18 @@ public fun CoroutineScope.launch(
 ##### 1：newCoroutineContext(context)将传入的Context与当前协程的Context合并
 ```kotlin
 public actual fun CoroutineScope.newCoroutineContext(context: CoroutineContext): CoroutineContext {
-    // 1
+    // 1.1
     val combined = foldCopies(coroutineContext, context, true)
-    // 2
+    // 1.2
     val debug = if (DEBUG) combined + CoroutineId(COROUTINE_ID.incrementAndGet()) else combined
-    // 3
+    // 1.3
     return if (combined !== Dispatchers.Default && combined[ContinuationInterceptor] == null)
         debug + Dispatchers.Default else debug
 }
 ```
-1：一般情况下，就是将传入的Context与当前协程的Context相加  
-2：非DEBUG模式，直接使用combined   
-3：确保了返回的Context一定有拦截器（一般的调度器都是拦截器，如：Dispatchers.Default），如果没有拦截器就给combined加一个Dispatchers.Default
+1.1：一般情况下，就是将传入的Context与当前协程的Context相加  
+1.2：非DEBUG模式，直接使用combined   
+1.3：确保了返回的Context一定有拦截器（一般的调度器都是拦截器，如：Dispatchers.Default），如果没有拦截器就给combined加一个Dispatchers.Default
 ##### 2：默认情况下，创建一个新的StandaloneCoroutine协程实例
 该实例会关联父协程的作用域（此处没有父协程，所以忽略这一层），并且提供后续步骤所需要的上下文。
 ```kotlin
@@ -418,10 +418,10 @@ public actual fun <R, T> (suspend R.() -> T).createCoroutineUnintercepted(
     receiver: R,
     completion: Continuation<T>
 ): Continuation<Unit> {
-    // 1
+    // 1.1
     val probeCompletion = probeCoroutineCreated(completion)
     return if (this is BaseContinuationImpl)
-        // 2
+        // 1.2
         create(receiver, probeCompletion)
     else {
         createCoroutineFromSuspendFunction(probeCompletion) {
@@ -430,8 +430,8 @@ public actual fun <R, T> (suspend R.() -> T).createCoroutineUnintercepted(
     }
 }
 ```
-1：probeCoroutineCreated为调试所用的api，正式环境会直接返回completion。所以probeCompletion就是completion。  
-2：this即(suspend R.() -> T)类型的当前对象，也就是通过launch{}开启协程所传入的一个函数类型对象。前面介绍CPS转换的时候说过，(suspend R.() -> T)类型在编译的时候会转换成SuspendLambda的子类，SuspendLambda的基类是BaseContinuationImpl所以会走create方法。
+1.1：probeCoroutineCreated为调试所用的api，正式环境会直接返回completion。所以probeCompletion就是completion。  
+1.2：this即(suspend R.() -> T)类型的当前对象，也就是通过launch{}开启协程所传入的一个函数类型对象。前面介绍CPS转换的时候说过，(suspend R.() -> T)类型在编译的时候会转换成SuspendLambda的子类，SuspendLambda的基类是BaseContinuationImpl所以会走create方法。
 
 在BaseContinuationImpl中create并没有实现，具体的实现在CPS转换后生成的类中
 ```java
@@ -494,6 +494,8 @@ internal abstract class ContinuationImpl(
 ```
 
 ##### 2：intercepted()生成DispatchedContinuation
+ContinuationInterceptor是一个CoroutineContext.Element，也就是context内的组成元素。
+context[ContinuationInterceptor]这种形式的代码可以从CoroutineContext获取到其中的ContinuationInterceptor。接着调用这个ContinuationInterceptor的interceptContinuation方法并把this作为参数传入。
 ```kotlin
 internal abstract class ContinuationImpl(
     completion: Continuation<Any?>?,
@@ -505,11 +507,51 @@ internal abstract class ContinuationImpl(
                 .also { intercepted = it }
 }
 ```
-ContinuationInterceptor是一个CoroutineContext.Element，也就是context内的组成元素。
-context[ContinuationInterceptor]这种形式的代码可以从CoroutineContext获取到其中的ContinuationInterceptor。接着调用这个ContinuationInterceptor的interceptContinuation方法并把this作为参数传入。
-
-开启协程的调度器Dispatchers.Default就是一个ContinuationInterceptor，以下是它的interceptContinuation方法实现。
+这个ContinuationInterceptor就是开启协程传入的Dispatchers.Default,interceptContinuation的具体实现在Dispatchers.Default的基类CoroutineDispatcher中.可见这个方法返回了一个DispatchedContinuation
+```kotlin
+public abstract class CoroutineDispatcher :
+    AbstractCoroutineContextElement(ContinuationInterceptor), ContinuationInterceptor {
+    public final override fun <T> interceptContinuation(continuation: Continuation<T>): Continuation<T> = DispatchedContinuation(this, continuation)
+}
+```
 ##### 3：resumeCancellableWith使用调度器执行逻辑代码
+intercepted()中返回的DispatchedContinuation会执行其resumeCancellableWith方法.在Dispatchers.Default的实现中,isDispatchNeeded直接是返回true,所以会走if分支.接下来我们看下dispatch方法做了什么.
+```kotlin
+inline fun resumeCancellableWith(
+    result: Result<T>,
+    noinline onCancellation: ((cause: Throwable) -> Unit)?
+) {
+    val state = result.toState(onCancellation)
+    if (dispatcher.isDispatchNeeded(context)) {
+        _state = state
+        resumeMode = MODE_CANCELLABLE
+        dispatcher.dispatch(context, this)
+    } else {
+        executeUnconfined(state, MODE_CANCELLABLE) {
+            if (!resumeCancelled(state)) {
+                resumeUndispatchedWith(result)
+            }
+        }
+    }
+}
+```
+dispatch的实现在SchedulerCoroutineDispatcher,SchedulerCoroutineDispatcher是Dispatchers.Default的基类.可以看到dispatch被一个CoroutineScheduler对象接管了.
+```kotlin
+internal open class SchedulerCoroutineDispatcher(
+    private val corePoolSize: Int = CORE_POOL_SIZE,
+    private val maxPoolSize: Int = MAX_POOL_SIZE,
+    private val idleWorkerKeepAliveNs: Long = IDLE_WORKER_KEEP_ALIVE_NS,
+    private val schedulerName: String = "CoroutineScheduler",
+) : ExecutorCoroutineDispatcher() {
 
+    // This is variable for test purposes, so that we can reinitialize from clean state
+    private var coroutineScheduler = createScheduler()
+
+    private fun createScheduler() =
+        CoroutineScheduler(corePoolSize, maxPoolSize, idleWorkerKeepAliveNs, schedulerName)
+
+    override fun dispatch(context: CoroutineContext, block: Runnable): Unit = coroutineScheduler.dispatch(block)
+}
+```
 
 ![图片替换文字](https://raw.githubusercontent.com/David-Su/Review/31bbd0e02fdd559ebf84dce6dc3da61f86addd89/Android/%E9%99%84%E4%BB%B6/coroutine_launch.svg)
