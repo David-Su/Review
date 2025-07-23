@@ -553,5 +553,101 @@ internal open class SchedulerCoroutineDispatcher(
     override fun dispatch(context: CoroutineContext, block: Runnable): Unit = coroutineScheduler.dispatch(block)
 }
 ```
+继续走进CoroutineScheduler的dispatch方法。这个方法主要是将block封装成一个task并交由CoroutineScheduler调度执行。调度的机制跟Java的线程池类似，这里不再展开。重点关注3.1中封装的task。
+```kotlin
+fun dispatch(block: Runnable, taskContext: TaskContext = NonBlockingContext, tailDispatch: Boolean = false) {
+    trackTask()
+    //3.1
+    val task = createTask(block, taskContext)
+    //获取当前线程的Worker
+    val currentWorker = currentWorker()
+    //尝试加入Worker的任务队列
+    val notAdded = currentWorker.submitToLocalQueue(task, tailDispatch)
+    //notAdded != null表示的是加入任务队列失败
+    if (notAdded != null) {
+        //尝试加入全局任务队列
+        if (!addToGlobalQueue(notAdded)) {
+            // Global queue is closed in the last step of close/shutdown -- no more tasks should be accepted
+            throw RejectedExecutionException("$schedulerName was terminated")
+        }
+    }
+    //以上代码用于确保将任务加入到队列，以下代码取保有足够的工作线程
+    val skipUnpark = tailDispatch && currentWorker != null
+    if (task.mode == TASK_NON_BLOCKING) {
+        if (skipUnpark) return
+        signalCpuWork()
+    } else {
+        // Increment blocking tasks anyway
+        signalBlockingWork(skipUnpark = skipUnpark)
+    }
+}
+```
+可以看到createTask返回的是一个Task的子类TaskImpl，而Task本身是个Runnable。当这个Task被执行时，会执行它所持有的block的Runnable方法，这个block就是resumeCancellableWith方法中传入
+CoroutineScheduler的dispatch方法的参数this。所以block就是DispatchedContinuation。
+```kotlin
+fun createTask(block: Runnable, taskContext: TaskContext): Task {
+    val nanoTime = schedulerTimeSource.nanoTime()
+    if (block is Task) {
+        block.submissionTime = nanoTime
+        block.taskContext = taskContext
+        return block
+    }
+    return TaskImpl(block, nanoTime, taskContext)
+}
 
-![图片替换文字](https://raw.githubusercontent.com/David-Su/Review/31bbd0e02fdd559ebf84dce6dc3da61f86addd89/Android/%E9%99%84%E4%BB%B6/coroutine_launch.svg)
+internal class TaskImpl(
+    @JvmField val block: Runnable,
+    submissionTime: Long,
+    taskContext: TaskContext
+) : Task(submissionTime, taskContext) {
+    override fun run() {
+        try {
+            block.run()
+        } finally {
+            taskContext.afterTask()
+        }
+    }
+}
+```
+DispatchedContinuation并不是直接继承Runnable，而是通过继承DispatchedTask间接继承Runnable以下是看DispatchedTask的run方法。在协程正常执行的情况下代码会走到3.1处，resume是Continuation的扩展方法，最终会执行Continuation的resumeWith。在这段代码里continuation这个对象是在DispatchedContinuation构造的时候传入的，也就是本次示例中的MainActivity$onCreate$1。
+```kotlin
+public final override fun run() {
+    assert { resumeMode != MODE_UNINITIALIZED } // should have been set before dispatching
+    val taskContext = this.taskContext
+    var fatalException: Throwable? = null
+    try {
+        val delegate = delegate as DispatchedContinuation<T>
+        val continuation = delegate.continuation
+        withContinuationContext(continuation, delegate.countOrElement) {
+            val context = continuation.context
+            val state = takeState() // NOTE: Must take state in any case, even if cancelled
+            val exception = getExceptionalResult(state)
+            /*
+                * Check whether continuation was originally resumed with an exception.
+                * If so, it dominates cancellation, otherwise the original exception
+                * will be silently lost.
+                */
+            val job = if (exception == null && resumeMode.isCancellableMode) context[Job] else null
+            if (job != null && !job.isActive) {
+                val cause = job.getCancellationException()
+                cancelCompletedResult(state, cause)
+                continuation.resumeWithStackTrace(cause)
+            } else {
+                if (exception != null) {
+                    continuation.resumeWithException(exception)
+                } else {
+                    //3.1
+                    continuation.resume(getSuccessfulResult(state))
+                }
+            }
+        }
+    } catch (e: Throwable) {
+        // This instead of runCatching to have nicer stacktrace and debug experience
+        fatalException = e
+    } finally {
+        val result = runCatching { taskContext.afterTask() }
+        handleFatalException(fatalException, result.exceptionOrNull())
+    }
+}
+```
+
