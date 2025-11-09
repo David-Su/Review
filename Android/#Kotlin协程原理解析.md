@@ -4,7 +4,7 @@
 
 * 协程可以用同步的代码编写方式编写异步的代码。  
 
-  通过网络请求获取数据并渲染到TextView  
+  举个日常开发的场景：通过网络请求获取数据并渲染到TextView。通过这个例子可以很直观的感受到协程的优点，在处理异步的场景中，协程的代码更为直观优雅。
 
     **协程方式** 
     ```kotlin
@@ -26,13 +26,16 @@
 协程只能运行在指定的协程域，一个协程域可以运行多个协程。当某个协程域的所有的协程运行完成，这个协程域的状态才为完成。
 
 ## 调度器
-
-* DEFAULT
-* IO
-* MAIN
+协程的运行需要调度器，调度器会调度线程执行协程中的任务。
+* **DEFAULT**  
+默认的调度器，开启协程如果不传入一个调度器的话，默认会用DEFAULT。执行时会使用内部的线程池执行，线程池的线程数等于 CPU 核心数，所以适合CPU密集型计算的任务。
+* **IO**  
+执行时会使用内部的线程池执行，线程数可以进行动态扩展，适合IO 密集型任务（IO任务主要是等待，不会占用太多CPU资源）。
+* **MAIN**  
+一个单线程执行任务的调度器。在安卓中，代表在主线程执行任务。
 
 ## 挂起
-在协程中，挂起的意思是切换到其他调度器执行,执行完成再回到原来的调度器执行（注意是原来的调度器，但不一定是原来的线程了。一个调度器可以有多个线程）。我们可以用suspend关键字修饰一个函数，表示该函数可能会被挂起。真正实现挂起的代码（比如withContext函数）必须在suspend函数执行，但是suspend方法不一定要执行挂起代码。
+在协程中，挂起的意思是暂停当前协程的运行。我们可以用suspend关键字修饰一个函数，表示该函数可能会被挂起。suspend函数不一定会实现真正的挂起，只有系统提供的suspend函数才能实现真正的挂起（如withContext、delay等）。suspend函数一定要放在suspend函数中执行。
 
 ```kotlin
 //能挂起的函数
@@ -75,6 +78,7 @@ public fun CoroutineScope.launch(
 
 ## CoroutineContext协程运行上下文
 ### CoroutineContext相加
+CoroutineContext可以进行相加，生成一个CombinedContext。如果左右两边的Context的存在同名的Key，右边的会覆盖左边的。对于拦截器会进行特殊处理，拦截器或者包含拦截器的Element始终会在CombinedContext的右边，方便查找（因为查找会优先查找右边）。
 ```java
     public operator fun plus(context: CoroutineContext): CoroutineContext =
         //如果右边的Context是空Context，直接返回左边的Context
@@ -314,17 +318,14 @@ public class CoroutineDemo {
     }
 }
 ```
-
-
-## 协程的运行过程
+## 开启协程
 以最简单的开启协程的方式举例
 ```kotlin
 GlobalScope.launch {
     //todo
 }
 ```
-### 开启协程
-#### 开启协程用的是CoroutineScope的launch方法
+### 开启协程用的是CoroutineScope的launch方法
 ```kotlin
 public fun CoroutineScope.launch(
     context: CoroutineContext = EmptyCoroutineContext,
@@ -342,7 +343,7 @@ public fun CoroutineScope.launch(
     return coroutine
 }
 ```
-##### 1：newCoroutineContext(context)将传入的Context与当前协程的Context合并
+#### 1：newCoroutineContext(context)将传入的Context与当前协程的Context合并
 ```kotlin
 public actual fun CoroutineScope.newCoroutineContext(context: CoroutineContext): CoroutineContext {
     // 1.1
@@ -357,7 +358,7 @@ public actual fun CoroutineScope.newCoroutineContext(context: CoroutineContext):
 1.1：一般情况下，就是将传入的Context与当前协程的Context相加  
 1.2：非DEBUG模式，直接使用combined   
 1.3：确保了返回的Context一定有拦截器（一般的调度器都是拦截器，如：Dispatchers.Default），如果没有拦截器就给combined加一个Dispatchers.Default
-##### 2：默认情况下，创建一个新的StandaloneCoroutine协程实例
+#### 2：默认情况下，创建一个新的StandaloneCoroutine协程实例
 该实例会关联父协程的作用域（此处没有父协程，所以忽略这一层），并且提供后续步骤所需要的上下文。
 ```kotlin
 private open class StandaloneCoroutine(
@@ -370,7 +371,7 @@ private open class StandaloneCoroutine(
     }
 }
 ```
-##### 3：coroutine.start(start, coroutine, block)默认情况下会调用CoroutineStart.DEFAULT的invoke方法
+#### 3：coroutine.start(start, coroutine, block)默认情况下会调用CoroutineStart.DEFAULT的invoke方法
 ```kotlin
 //StandaloneCoroutine的start方法
 public abstract class AbstractCoroutine<in T>(
@@ -396,7 +397,7 @@ public enum class CoroutineStart {
 }
 
 ```
-#### 进入block.startCoroutineCancellable(receiver, completion)
+### 进入block.startCoroutineCancellable(receiver, completion)
 注意这里的receiver和completion都为刚刚创建的StandaloneCoroutine协程实例
 ```kotlin
 internal fun <R, T> (suspend (R) -> T).startCoroutineCancellable(
@@ -412,7 +413,7 @@ internal fun <R, T> (suspend (R) -> T).startCoroutineCancellable(
     .resumeCancellableWith(Result.success(Unit), onCancellation)
 }
 ```
-##### 1：createCoroutineUnintercepted(receiver, completion)创建SuspendLambda对象
+#### 1：createCoroutineUnintercepted(receiver, completion)创建SuspendLambda对象
 ```kotlin
 public actual fun <R, T> (suspend R.() -> T).createCoroutineUnintercepted(
     receiver: R,
@@ -493,7 +494,7 @@ internal abstract class ContinuationImpl(
 }
 ```
 
-##### 2：intercepted()生成DispatchedContinuation
+#### 2：intercepted()生成DispatchedContinuation
 ContinuationInterceptor是一个CoroutineContext.Element，也就是context内的组成元素。
 context[ContinuationInterceptor]这种形式的代码可以从CoroutineContext获取到其中的ContinuationInterceptor。接着调用这个ContinuationInterceptor的interceptContinuation方法并把this作为参数传入。
 ```kotlin
@@ -514,7 +515,7 @@ public abstract class CoroutineDispatcher :
     public final override fun <T> interceptContinuation(continuation: Continuation<T>): Continuation<T> = DispatchedContinuation(this, continuation)
 }
 ```
-##### 3：resumeCancellableWith使用调度器执行逻辑代码
+#### 3：resumeCancellableWith使用调度器执行逻辑代码
 intercepted()中返回的DispatchedContinuation会执行其resumeCancellableWith方法.在Dispatchers.Default的实现中,isDispatchNeeded直接是返回true,所以会走if分支.接下来我们看下dispatch方法做了什么.
 ```kotlin
 inline fun resumeCancellableWith(
@@ -650,4 +651,39 @@ public final override fun run() {
     }
 }
 ```
+resumeWith是BaseContinuationImpl中的方法，BaseContinuationImpl也是所有开启协程传入的lambda通过cps转换后生成的类的基类（在本例中就是MainActivity$onCreate$1）。可以看到方法中开启了一个循环，先执行自身的invokeSuspend方法获取一个结果，再调用上游的Continuation的invokeSuspend。
+```kotlin
+internal abstract class BaseContinuationImpl(
+    public val completion: Continuation<Any?>?
+) : Continuation<Any?>, CoroutineStackFrame, Serializable {
 
+    public final override fun resumeWith(result: Result<Any?>) {
+        var current = this
+        var param = result
+        while (true) {
+            probeCoroutineResumed(current)
+            with(current) {
+                val completion = completion!!
+                val outcome: Result<Any?> =
+                    try {
+                        val outcome = invokeSuspend(param)
+                        if (outcome === COROUTINE_SUSPENDED) return
+                        Result.success(outcome)
+                    } catch (exception: Throwable) {
+                        Result.failure(exception)
+                    }
+                releaseIntercepted()
+                if (completion is BaseContinuationImpl) {
+                    current = completion
+                    param = outcome
+                } else {
+                    completion.resumeWith(outcome)
+                    return
+                }
+            }
+        }
+    }
+
+    ...
+}
+```
