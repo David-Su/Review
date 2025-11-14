@@ -687,3 +687,125 @@ internal abstract class BaseContinuationImpl(
     ...
 }
 ```
+
+## withContext切换调度
+在suspend方法中，可通过withContext并传入一个suspend lamda进行一个调度器的切换。以下是withContext这里我忽略了相同调度器的情况，重点看withConetext切换另外的调度器的情况。
+### withContext源码
+```kotlin
+public suspend fun <T> withContext(
+    context: CoroutineContext,
+    block: suspend CoroutineScope.() -> T
+): T {
+    contract {
+        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+    }
+            //1
+    return suspendCoroutineUninterceptedOrReturn sc@ { uCont ->
+        // compute new context
+        //2
+        val oldContext = uCont.context
+        // Copy CopyableThreadContextElement if necessary
+        //3
+        val newContext = oldContext.newCoroutineContext(context)
+        ...
+        // SLOW PATH -- use new dispatcher
+        //4
+        val coroutine = DispatchedCoroutine(newContext, uCont)
+        block.startCoroutineCancellable(coroutine, coroutine)
+        coroutine.getResult()
+    }
+}
+
+```
+#### 1：获取外部Continuation
+withContext本身就是一个suspend方法，所以通过cps转换的时候参数本来就会新增一个Continuation，suspendCoroutineUninterceptedOrReturn相当于让开发者可以在代码编写的时候就用到这个Continuation。
+#### 2：获取外部Continuation的Context
+从传入的Continuation中获取Context，即挂起点的Context。
+#### 3：合并Context
+外部Continuation的Context与传入的Context合并，调度器会优先使用传入的Context中的调度器。
+#### 4：开始调度
+在介绍GlobalScope.launch的时候，同样会使用block调用startCoroutineCancellable，区别只是传入的参数。GlobalScope.launch使用的是StandaloneCoroutine，withContext用的则是DispatchedCoroutine，所以接下来我们来看一下DispatchedCoroutine。
+
+### DispatchedCoroutine与
+DispatchedCoroutin继承ScopeCoroutine，ScopeCoroutine继承AbstractCoroutine。StandaloneCoroutine直接继承AbstractCoroutine
+```kotlin
+internal class DispatchedCoroutine<in T> internal constructor(
+    context: CoroutineContext,
+    uCont: Continuation<T>
+) : ScopeCoroutine<T>(context, uCont) {
+    @JvmField
+    public val _decision = atomic(UNDECIDED)
+
+    private fun trySuspend(): Boolean {
+        _decision.loop { decision ->
+            when (decision) {
+                UNDECIDED -> if (this._decision.compareAndSet(UNDECIDED, SUSPENDED)) return true
+                RESUMED -> return false
+                else -> error("Already suspended")
+            }
+        }
+    }
+
+    private fun tryResume(): Boolean {
+        _decision.loop { decision ->
+            when (decision) {
+                UNDECIDED -> if (this._decision.compareAndSet(UNDECIDED, RESUMED)) return true
+                SUSPENDED -> return false
+                else -> error("Already resumed")
+            }
+        }
+    }
+
+    override fun afterCompletion(state: Any?) {
+        // Call afterResume from afterCompletion and not vice-versa, because stack-size is more
+        // important for afterResume implementation
+        afterResume(state)
+    }
+
+    override fun afterResume(state: Any?) {
+        if (tryResume()) return // completed before getResult invocation -- bail out
+        // Resume in a cancellable way because we have to switch back to the original dispatcher
+        uCont.intercepted().resumeCancellableWith(recoverResult(state, uCont))
+    }
+
+    internal fun getResult(): Any? {
+        if (trySuspend()) return COROUTINE_SUSPENDED
+        // otherwise, onCompletionInternal was already invoked & invoked tryResume, and the result is in the state
+        val state = this.state.unboxState()
+        if (state is CompletedExceptionally) throw state.cause
+        @Suppress("UNCHECKED_CAST")
+        return state as T
+    }
+}
+
+internal open class ScopeCoroutine<in T>(
+    context: CoroutineContext,
+    @JvmField val uCont: Continuation<T> // unintercepted continuation
+) : AbstractCoroutine<T>(context, true, true), CoroutineStackFrame {
+
+    final override val callerFrame: CoroutineStackFrame? get() = uCont as? CoroutineStackFrame
+    final override fun getStackTraceElement(): StackTraceElement? = null
+
+    final override val isScopedCoroutine: Boolean get() = true
+
+    override fun afterCompletion(state: Any?) {
+        // Resume in a cancellable way by default when resuming from another context
+        uCont.intercepted().resumeCancellableWith(recoverResult(state, uCont))
+    }
+
+    override fun afterResume(state: Any?) {
+        // Resume direct because scope is already in the correct context
+        uCont.resumeWith(recoverResult(state, uCont))
+    }
+}
+
+private open class StandaloneCoroutine(
+    parentContext: CoroutineContext,
+    active: Boolean
+) : AbstractCoroutine<Unit>(parentContext, initParentJob = true, active = active) {
+    override fun handleJobException(exception: Throwable): Boolean {
+        handleCoroutineException(context, exception)
+        return true
+    }
+}
+```
