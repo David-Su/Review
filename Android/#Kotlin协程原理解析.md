@@ -76,11 +76,23 @@ public fun CoroutineScope.launch(
     ...
 }
 ```
-## Contiuation
-### SuspendLambda
-### CancellableContinuationImpl
+## Continuation
+Continuation表示续体，怎么理解呢，协程运行中当调用调用某个suspend函数进行挂起的时候这个Continuation会参与调度，当调度完成后会通过Continuation的resumeWith恢复挂起点的重新运行。
+
+**Continuation的继承树**   
+![](https://raw.githubusercontent.com/David-Su/David-Su.github.io/757a0c1120e7682293bf002d2c66075d71c3c36b/assets/images/Coroutine-SuspendLambda%E7%BB%A7%E6%89%BF%E5%85%B3%E7%B3%BB.drawio.svg)
+
+在后续讲解CPS转换的时候，suspend lambda会转换成横一个SuspendLambda的子类，而suspend方法则会转换成ContinuationImpl的子类。这里可以提前了解一下。
 
 ## CoroutineContext协程运行上下文
+CoroutineContext代表着协程运行的上下文。CoroutineContext可以相加所以它是一个复合的概念，一般来说不同的CoroutineContext会继承CoroutineContext.Element实行相加，在需要使用的场景中通过Key从一个复合的CoroutineContext中取出对应的Element。
+
+常见的Element有：
+* CoroutineDispatcher
+* Job
+* CoroutineName
+* CoroutineExceptionHandler
+
 ### CoroutineContext相加
 CoroutineContext可以进行相加，生成一个CombinedContext。如果左右两边的Context的存在同名的Key，右边的会覆盖左边的。对于拦截器会进行特殊处理，拦截器或者包含拦截器的Element始终会在CombinedContext的右边，方便查找（因为查找会优先查找右边）。
 ```java
@@ -109,12 +121,6 @@ CoroutineContext可以进行相加，生成一个CombinedContext。如果左右�
                 }
             }
 ```
-### CoroutineContext
-#### Job
-#### CoroutineDispatcher
-#### CoroutineName,CoroutineExceptionHandler...
-
-## 测试案例
 
 ## cps转换
 ### suspend CoroutineScope.() -> T
