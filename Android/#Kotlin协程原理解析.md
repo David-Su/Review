@@ -33,24 +33,28 @@
 执行时会使用内部的线程池执行，线程数可以进行动态扩展，适合IO 密集型任务（IO任务主要是等待，不会占用太多CPU资源）。
 * **MAIN**  
 一个单线程执行任务的调度器。在安卓中，代表在主线程执行任务。
-
 ## 挂起
-在协程中，挂起的意思是暂停当前协程的运行。我们可以用suspend关键字修饰一个函数，表示该函数可能会被挂起。suspend函数不一定会实现真正的挂起，只有系统提供的suspend函数才能实现真正的挂起（如withContext、delay等）。suspend函数一定要放在suspend函数中执行。
+在协程中，挂起是指一个协程的执行可以在不阻塞线程的情况下暂停和恢复。我们可以用suspend关键字修饰一个函数，表示该函数可能会被挂起。suspend函数不一定会实现真正的挂起，只有释放了当前执行中的线程才是真正的挂起（如使用withContext、delay等）。suspend函数一定要放在suspend函数中执行。
 
+真正的挂起
 ```kotlin
-//能挂起的函数
-private suspend fun withContextSuspend(): String {
-    return withContext(Dispatchers.Default) {
-        "withContextSuspend"
+GlobalScope.launch(Dispatchers.Main) {
+    //开始挂起
+    withContext(Dispatchers.IO) {
+        ...
     }
 }
-//不会挂起的函数
-private suspend fun withContextSuspend(): String {
-    return ""
+```
+不能真正挂起
+```kotlin
+GlobalScope.launch(Dispatchers.Main) {
+    suspend fun test(): String {
+        return ""
+    }
+    //相当于执行了一个普通方法
+    test()
 }
 ```
-我们编写的逻辑代码只有在调用Kotlin提供的suspend函数后才能实现真正的挂起。比如如withContext函数，Kotlin编译器会在编译时对这些特有的函数
-
 ## 协程作用域CoroutineScope
 用于运行一个新协程的领域类，其本身包含了协程运行的一个全局上下文。
 ```kotlin
@@ -651,6 +655,7 @@ public final override fun run() {
     }
 }
 ```
+<a id = "jump1"></a>
 resumeWith是BaseContinuationImpl中的方法，BaseContinuationImpl也是所有开启协程传入的lambda通过cps转换后生成的类的基类（在本例中就是MainActivity$onCreate$1）。可以看到方法中开启了一个循环，先执行自身的invokeSuspend方法获取一个结果，再调用上游的Continuation的invokeSuspend。
 ```kotlin
 internal abstract class BaseContinuationImpl(
@@ -724,10 +729,48 @@ withContext本身就是一个suspend方法，所以通过cps转换的时候参�
 #### 3：合并Context
 外部Continuation的Context与传入的Context合并，调度器会优先使用传入的Context中的调度器。
 #### 4：开始调度
-在介绍GlobalScope.launch的时候，同样会使用block调用startCoroutineCancellable，区别只是传入的参数。GlobalScope.launch使用的是StandaloneCoroutine，withContext用的则是DispatchedCoroutine，所以接下来我们来看一下DispatchedCoroutine。
+在介绍GlobalScope.launch的时候，同样会使用block调用startCoroutineCancellable构建自身并持有着一个上游的Continuation，区别只是GlobalScope.launch使用的是StandaloneCoroutine，withContext用的则是DispatchedCoroutine。而startCoroutineCancellable最终会通过调度执行到block所代表的BaseContinuationImpl的resumeWith[点击跳转回顾](#jump1)，resumeWith最终又会执行上游Continuation的resumeWith。所以接下来我们来看一下DispatchedCoroutine和ScopeCoroutine。
 
-### DispatchedCoroutine与
-DispatchedCoroutin继承ScopeCoroutine，ScopeCoroutine继承AbstractCoroutine。StandaloneCoroutine直接继承AbstractCoroutine
+### DispatchedCoroutine与ScopeCoroutine
+DispatchedCoroutin继承ScopeCoroutine，ScopeCoroutine继承AbstractCoroutine，ScopeCoroutine和DispatchedCoroutin都重写了afterCompletion和afterResume，所以以DispatchedCoroutin为准就好。当DispatchedCoroutine与ScopeCoroutine的resumeWith被调用后，都会执行afterResume，这是他们共同的基类AbstractCoroutine的逻辑。  
+
+从这里可分析出，使用withContext切换了调度器执行之后，当调度器执行完block内的逻辑后会通过DispatchedCoroutine的afterResume重新开始挂起点处的调度。而GlobalScope.launch所对应StandaloneCoroutine因为他本身就是协程的入口，不存在挂起点的概念，所以并不需要切回原调度器，这里需要注意的一点就是afterCompletion是JobSupport的方法并且只是个空实现。
+
+AbstractCoroutine
+```kotlin
+public abstract class AbstractCoroutine<in T>(
+    parentContext: CoroutineContext,
+    initParentJob: Boolean,
+    active: Boolean
+) : JobSupport(active), Job, Continuation<T>, CoroutineScope {
+
+    /**
+     * Completes execution of this with coroutine with the specified result.
+     */
+    public final override fun resumeWith(result: Result<T>) {
+        val state = makeCompletingOnce(result.toState())
+        if (state === COMPLETING_WAITING_CHILDREN) return
+        afterResume(state)
+    }
+
+    protected open fun afterResume(state: Any?): Unit = afterCompletion(state)
+
+    ...
+}
+```
+StandaloneCoroutine
+```kotlin
+private open class StandaloneCoroutine(
+    parentContext: CoroutineContext,
+    active: Boolean
+) : AbstractCoroutine<Unit>(parentContext, initParentJob = true, active = active) {
+    override fun handleJobException(exception: Throwable): Boolean {
+        handleCoroutineException(context, exception)
+        return true
+    }
+}
+```
+DispatchedCoroutine
 ```kotlin
 internal class DispatchedCoroutine<in T> internal constructor(
     context: CoroutineContext,
@@ -775,37 +818,6 @@ internal class DispatchedCoroutine<in T> internal constructor(
         if (state is CompletedExceptionally) throw state.cause
         @Suppress("UNCHECKED_CAST")
         return state as T
-    }
-}
-
-internal open class ScopeCoroutine<in T>(
-    context: CoroutineContext,
-    @JvmField val uCont: Continuation<T> // unintercepted continuation
-) : AbstractCoroutine<T>(context, true, true), CoroutineStackFrame {
-
-    final override val callerFrame: CoroutineStackFrame? get() = uCont as? CoroutineStackFrame
-    final override fun getStackTraceElement(): StackTraceElement? = null
-
-    final override val isScopedCoroutine: Boolean get() = true
-
-    override fun afterCompletion(state: Any?) {
-        // Resume in a cancellable way by default when resuming from another context
-        uCont.intercepted().resumeCancellableWith(recoverResult(state, uCont))
-    }
-
-    override fun afterResume(state: Any?) {
-        // Resume direct because scope is already in the correct context
-        uCont.resumeWith(recoverResult(state, uCont))
-    }
-}
-
-private open class StandaloneCoroutine(
-    parentContext: CoroutineContext,
-    active: Boolean
-) : AbstractCoroutine<Unit>(parentContext, initParentJob = true, active = active) {
-    override fun handleJobException(exception: Throwable): Boolean {
-        handleCoroutineException(context, exception)
-        return true
     }
 }
 ```
