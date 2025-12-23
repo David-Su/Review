@@ -1,7 +1,7 @@
 # Kotlin协程原理解析
 
 ## 协程介绍
-
+**Kotlin协程有以下特点**：
 * 协程可以用同步的代码编写方式编写异步的代码。  
 
   举个日常开发的场景：通过网络请求获取数据并渲染到TextView。通过这个例子可以很直观的感受到协程的优点，在处理异步的场景中，协程的代码更为直观优雅。
@@ -25,7 +25,8 @@
 * 结构化并发  
 协程只能运行在指定的协程域，一个协程域可以运行多个协程。当某个协程域的所有的协程运行完成，这个协程域的状态才为完成。
 
-## 调度器
+首先先介绍一下协程中的一些基础概念，然后再通过具体例子解析开启协程的原理。
+### 调度器
 协程的运行需要调度器，调度器会调度线程执行协程中的任务。
 * **DEFAULT**  
 默认的调度器，开启协程如果不传入一个调度器的话，默认会用DEFAULT。执行时会使用内部的线程池执行，线程池的线程数等于 CPU 核心数，所以适合CPU密集型计算的任务。
@@ -33,7 +34,7 @@
 执行时会使用内部的线程池执行，线程数可以进行动态扩展，适合IO 密集型任务（IO任务主要是等待，不会占用太多CPU资源）。
 * **MAIN**  
 一个单线程执行任务的调度器。在安卓中，代表在主线程执行任务。
-## 挂起
+### 挂起
 在协程中，挂起是指一个协程的执行可以在不阻塞线程的情况下暂停和恢复。我们可以用suspend关键字修饰一个函数，表示该函数可能会被挂起。suspend函数不一定会实现真正的挂起，只有释放了当前执行中的线程才是真正的挂起（如使用withContext、delay等）。suspend函数一定要放在suspend函数中执行。
 
 真正的挂起
@@ -55,7 +56,7 @@ GlobalScope.launch(Dispatchers.Main) {
     test()
 }
 ```
-## 协程作用域CoroutineScope
+### 协程作用域CoroutineScope
 用于运行一个新协程的领域类，其本身包含了协程运行的一个全局上下文。
 ```kotlin
 public interface CoroutineScope {
@@ -76,7 +77,7 @@ public fun CoroutineScope.launch(
     ...
 }
 ```
-## Continuation
+### Continuation
 Continuation表示续体，怎么理解呢，协程运行中当调用调用某个suspend函数进行挂起的时候这个Continuation会参与调度，当调度完成后会通过Continuation的resumeWith恢复挂起点的重新运行。
 
 **Continuation的继承树**   
@@ -84,7 +85,7 @@ Continuation表示续体，怎么理解呢，协程运行中当调用调用某�
 
 在后续讲解CPS转换的时候，suspend lambda会转换成横一个SuspendLambda的子类，而suspend方法则会转换成ContinuationImpl的子类。这里可以提前了解一下。
 
-## CoroutineContext协程运行上下文
+### CoroutineContext协程运行上下文
 CoroutineContext代表着协程运行的上下文。CoroutineContext可以相加所以它是一个复合的概念，一般来说不同的CoroutineContext会继承CoroutineContext.Element实行相加，在需要使用的场景中通过Key从一个复合的CoroutineContext中取出对应的Element。
 
 常见的Element有：
@@ -93,7 +94,7 @@ CoroutineContext代表着协程运行的上下文。CoroutineContext可以相加
 * CoroutineName
 * CoroutineExceptionHandler
 
-### CoroutineContext相加
+#### CoroutineContext相加
 CoroutineContext可以进行相加，生成一个CombinedContext。如果左右两边的Context的存在同名的Key，右边的会覆盖左边的。对于拦截器会进行特殊处理，拦截器或者包含拦截器的Element始终会在CombinedContext的右边，方便查找（因为查找会优先查找右边）。
 ```java
     public operator fun plus(context: CoroutineContext): CoroutineContext =
@@ -122,8 +123,9 @@ CoroutineContext可以进行相加，生成一个CombinedContext。如果左右�
             }
 ```
 
-## cps转换
-### suspend CoroutineScope.() -> T
+### cps转换
+Kotlin是基于JVM的语言，为了使协程这种基于语言层面的并发设计模式能正常跑在JVM上面，Kotlin编译器会对相关的代码进行CPS转换，进行转换的情况有以下的几种：
+#### suspend CoroutineScope.() -> T
 这种类型对应开启协程所传入的一个函数类型的对象block
 ```kotlin
 public fun CoroutineScope.launch(
@@ -133,12 +135,13 @@ public fun CoroutineScope.launch(
     ...
 }
 ```
-#### 转换步骤
+**转换步骤**  
 * block对象会转换成一个继承SuspendLambda的内部类对象
 * 该内部类对象生成状态机逻辑
-#### 示例
-源码
+
+**以下为示例**
 ```kotlin
+//源码
 class CoroutineDemo {
 
     init {
@@ -164,8 +167,8 @@ class CoroutineDemo {
     }
 }
 ```
-cps转换后的代码(经过简化)
 ```java
+//cps转换后的代码(经过简化)
 class CoroutineDemo$1 extends SuspendLambda {
     Object L$0;
     Object L$1;
@@ -234,8 +237,8 @@ class CoroutineDemo$1 extends SuspendLambda {
 ```
 
 
-### suspend方法
-#### 转换步骤
+#### suspend方法
+**转换步骤**
 * 转换成一个普通的java方法
 * 增加一个Continuatio参数
 * 返回值改为Object
@@ -244,9 +247,10 @@ class CoroutineDemo$1 extends SuspendLambda {
   * 方法逻辑改为状态机逻辑
 
 转换的思路跟suspend CoroutineScope.() -> T转换的思路是相似的，不同的是suspend CoroutineScope.() -> T的状态机逻辑在invokeSuspend中，而suspend方法的状态机逻辑在对应的java方法的方法体中。
-#### 示例
-源码
+
+**以下为示例**
 ```kotlin
+//源码
 class CoroutineDemo {
 
     suspend fun getResult(): Int {
@@ -263,8 +267,8 @@ class CoroutineDemo {
     }
 }
 ```
-cps转换后的代码(经过简化)
 ```java
+//cps转换后的代码(经过简化)
 public class CoroutineDemo {
 
     public final Object getResult(final Continuation continuation) {
