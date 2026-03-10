@@ -522,7 +522,7 @@ internal abstract class ContinuationImpl(
                 .also { intercepted = it }
 }
 ```
-这个ContinuationInterceptor就是开启协程传入的Dispatchers.Default,interceptContinuation的具体实现在Dispatchers.Default的基类CoroutineDispatcher中.可见这个方法返回了一个DispatchedContinuation
+这个ContinuationInterceptor就是开启协程传入的Dispatchers.Default，interceptContinuation的具体实现在Dispatchers.Default的基类CoroutineDispatcher中，可见这个方法返回了一个DispatchedContinuation。
 ```kotlin
 public abstract class CoroutineDispatcher :
     AbstractCoroutineContextElement(ContinuationInterceptor), ContinuationInterceptor {
@@ -597,7 +597,7 @@ fun dispatch(block: Runnable, taskContext: TaskContext = NonBlockingContext, tai
     }
 }
 ```
-可以看到createTask返回的是一个Task的子类TaskImpl，而Task本身是个Runnable。当这个Task被执行时，会执行它所持有的block的Runnable方法，这个block就是resumeCancellableWith方法中传入
+可以看到createTask返回的是一个Task的子类TaskImpl，而Task本身是个Runnable。当这个Task被执行时，会执行它所持有的block的run方法，这个block就是resumeCancellableWith方法中传入
 CoroutineScheduler的dispatch方法的参数this。所以block就是DispatchedContinuation。
 ```kotlin
 fun createTask(block: Runnable, taskContext: TaskContext): Task {
@@ -624,7 +624,7 @@ internal class TaskImpl(
     }
 }
 ```
-DispatchedContinuation并不是直接继承Runnable，而是通过继承DispatchedTask间接继承Runnable以下是看DispatchedTask的run方法。在协程正常执行的情况下代码会走到3.1处，resume是Continuation的扩展方法，最终会执行Continuation的resumeWith。在这段代码里continuation这个对象是在DispatchedContinuation构造的时候传入的，也就是本次示例中的MainActivity$onCreate$1。
+这个block也就是DispatchedContinuation并不是直接继承Runnable，而是通过继承DispatchedTask间接继承Runnable，以下是看DispatchedTask的run方法。在协程正常执行的情况下代码会走到3.1处，resume是Continuation的扩展方法，最终会执行Continuation的resumeWith。在这段代码里continuation这个对象是在DispatchedContinuation构造的时候传入的，也就是本次示例中的MainActivity$onCreate$1。
 ```kotlin
 public final override fun run() {
     assert { resumeMode != MODE_UNINITIALIZED } // should have been set before dispatching
@@ -665,6 +665,17 @@ public final override fun run() {
     }
 }
 ```
+
+resume是Continuation的扩展方法，相当于调用了resumeWith。
+```kotlin
+/**
+ * Resumes the execution of the corresponding coroutine passing [value] as the return value of the last suspension point.
+ */
+@SinceKotlin("1.3")
+@InlineOnly
+public inline fun <T> Continuation<T>.resume(value: T): Unit = resumeWith(Result.success(value))
+```
+
 <a id = "jump1"></a>
 resumeWith是BaseContinuationImpl中的方法，BaseContinuationImpl也是所有开启协程传入的lambda通过cps转换后生成的类的基类（在本例中就是MainActivity$onCreate$1）。可以看到方法中开启了一个循环，先执行自身的invokeSuspend方法获取一个结果，再调用上游的Continuation的invokeSuspend。
 ```kotlin
